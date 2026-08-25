@@ -379,8 +379,8 @@ export class FrameSolver {
         // Normal force (positive = tension, negative = compression):
         const N_val = -Ni - qXi * s;
 
-        // Shear force:
-        const T_val = -Ti - qZeta * s;
+        // Shear force (positive = clockwise rotation / upward left support reaction):
+        const T_val = Ti + qZeta * s;
 
         // Bending moment (drawn on tension side, dM/ds = T):
         const M_val = Mi - Ti * s - 0.5 * qZeta * s * s;

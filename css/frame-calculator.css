@@ -667,6 +667,17 @@ input[type=number] {
   align-items: center;
   justify-content: space-between;
   background: #f8fafc;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+}
+.modal-header:active {
+  cursor: grabbing;
+}
+.modal-header button,
+.modal-header a,
+.modal-header input {
+  cursor: pointer;
 }
 
 .modal-title {

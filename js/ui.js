@@ -90,8 +90,10 @@ export class FrameCalculatorApp {
     this.statusElem = document.getElementById('statusElem');
     this.statusN = document.getElementById('statusN');
     this.statusT = document.getElementById('statusT');
-    this.statusM = document.getElementById('statusM');
     this.statusEquilibrium = document.getElementById('statusEquilibrium');
+
+    // Make all modals draggable by header
+    this.initDraggableModals();
   }
 
   initRenderer() {
@@ -664,9 +666,9 @@ export class FrameCalculatorApp {
     (this.frameData.nodes || []).forEach((node, idx) => {
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td><input type="text" class="poly-input text-center font-bold text-blue-700 font-mono text-[11.5px]" value="${node.id}" data-field="id"></td>
-        <td><input type="number" step="0.5" class="poly-input text-center font-mono font-bold" value="${node.x}" data-field="x"></td>
-        <td><input type="number" step="0.5" class="poly-input text-center font-mono font-bold" value="${node.z}" data-field="z"></td>
+        <td><input type="text" class="poly-input text-center font-bold text-blue-700 font-mono text-[11.5px]" value="${node.id}" placeholder="0" data-field="id"></td>
+        <td><input type="number" step="0.5" class="poly-input text-center font-mono font-bold" value="${node.x}" placeholder="0" data-field="x"></td>
+        <td><input type="number" step="0.5" class="poly-input text-center font-mono font-bold" value="${node.z}" placeholder="0" data-field="z"></td>
         <td>
           <select class="poly-input text-[11px] font-medium" data-field="support">
             <option value="none" ${node.support === 'none' ? 'selected' : ''}>${t.supportNone}</option>
@@ -715,10 +717,10 @@ export class FrameCalculatorApp {
       const labelJ = elem.nodeJ || 'j';
 
       tr.innerHTML = `
-        <td><input type="text" class="poly-input text-center font-bold text-slate-800 font-mono text-[11.5px]" value="${elem.id}" data-field="id"></td>
+        <td><input type="text" class="poly-input text-center font-bold text-slate-800 font-mono text-[11.5px]" value="${elem.id}" placeholder="0" data-field="id"></td>
         <td><select class="poly-input text-[11px] font-bold" data-field="nodeI">${optI}</select></td>
         <td><select class="poly-input text-[11px] font-bold" data-field="nodeJ">${optJ}</select></td>
-        <td><input type="number" step="0.1" min="0.01" class="poly-input text-center font-bold text-purple-700 font-mono text-[11.5px]" value="${elem.EJ !== undefined ? elem.EJ : 1.0}" data-field="EJ"></td>
+        <td><input type="number" step="0.1" min="0.01" class="poly-input text-center font-bold text-purple-700 font-mono text-[11.5px]" value="${elem.EJ !== undefined ? elem.EJ : 1.0}" placeholder="0" data-field="EJ"></td>
         <td>
           <div class="flex items-center justify-center gap-2 text-[10.5px]">
             <label class="flex items-center gap-1 cursor-pointer" title="Hinge at ${labelI} (Start Node)">
@@ -796,9 +798,9 @@ export class FrameCalculatorApp {
 
       tr.innerHTML = `
         <td><select class="poly-input text-[11px] font-bold" data-field="nodeId">${opt}</select></td>
-        <td><input type="number" step="1" class="poly-input text-center font-bold text-red-600 font-mono" value="${nl.Fx || 0}" data-field="Fx"></td>
-        <td><input type="number" step="1" class="poly-input text-center font-bold text-red-600 font-mono" value="${nl.Fz || 0}" data-field="Fz"></td>
-        <td><input type="number" step="1" class="poly-input text-center font-bold text-amber-600 font-mono" value="${nl.M || 0}" data-field="M"></td>
+        <td><input type="number" step="1" class="poly-input text-center font-bold text-red-600 font-mono" value="${nl.Fx || 0}" placeholder="0" data-field="Fx"></td>
+        <td><input type="number" step="1" class="poly-input text-center font-bold text-red-600 font-mono" value="${nl.Fz || 0}" placeholder="0" data-field="Fz"></td>
+        <td><input type="number" step="1" class="poly-input text-center font-bold text-amber-600 font-mono" value="${nl.M || 0}" placeholder="0" data-field="M"></td>
         <td><button class="btn-icon-del">✕</button></td>
       `;
 
@@ -834,8 +836,8 @@ export class FrameCalculatorApp {
 
       tr.innerHTML = `
         <td><select class="poly-input text-[11px] font-bold" data-field="elementId">${opt}</select></td>
-        <td><input type="number" step="1" class="poly-input text-center font-bold text-red-600 font-mono" value="${dl.qx || 0}" data-field="qx"></td>
-        <td><input type="number" step="1" class="poly-input text-center font-bold text-red-600 font-mono" value="${dl.qz || 0}" data-field="qz"></td>
+        <td><input type="number" step="1" class="poly-input text-center font-bold text-red-600 font-mono" value="${dl.qx || 0}" placeholder="0" data-field="qx"></td>
+        <td><input type="number" step="1" class="poly-input text-center font-bold text-red-600 font-mono" value="${dl.qz || 0}" placeholder="0" data-field="qz"></td>
         <td><button class="btn-icon-del">✕</button></td>
       `;
 
@@ -871,16 +873,16 @@ export class FrameCalculatorApp {
       <div class="space-y-4">
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">${t.nodeIdLabel}</label>
-          <input type="text" id="inpAddNodeId" class="poly-input text-left font-mono font-bold text-sm px-3 py-2" value="N${nextIdx}">
+          <input type="text" id="inpAddNodeId" class="poly-input text-left font-mono font-bold text-sm px-3 py-2" value="N${nextIdx}" placeholder="0">
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">${t.coordXLabel}</label>
-            <input type="number" id="inpAddNodeX" step="0.5" class="poly-input text-left font-mono font-bold text-sm px-3 py-2" value="0">
+            <input type="number" id="inpAddNodeX" step="0.5" class="poly-input text-left font-mono font-bold text-sm px-3 py-2" value="0" placeholder="0">
           </div>
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">${t.coordZLabel}</label>
-            <input type="number" id="inpAddNodeZ" step="0.5" class="poly-input text-left font-mono font-bold text-sm px-3 py-2" value="0">
+            <input type="number" id="inpAddNodeZ" step="0.5" class="poly-input text-left font-mono font-bold text-sm px-3 py-2" value="0" placeholder="0">
           </div>
         </div>
         <div>
@@ -922,7 +924,7 @@ export class FrameCalculatorApp {
       <div class="space-y-4">
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">${t.elemIdLabel}</label>
-          <input type="text" id="inpAddElemId" class="poly-input text-left font-mono font-bold text-sm px-3 py-2" value="E${nextIdx}">
+          <input type="text" id="inpAddElemId" class="poly-input text-left font-mono font-bold text-sm px-3 py-2" value="E${nextIdx}" placeholder="0">
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
@@ -936,7 +938,7 @@ export class FrameCalculatorApp {
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">${t.elemEJCol || 'Flexural Rigidity EJ'}</label>
-          <input type="number" id="inpAddElemEJ" step="0.1" min="0.01" class="poly-input text-left font-mono font-bold text-sm px-3 py-2 text-purple-700" value="1.0">
+          <input type="number" id="inpAddElemEJ" step="0.1" min="0.01" class="poly-input text-left font-mono font-bold text-sm px-3 py-2 text-purple-700" value="1.0" placeholder="0">
         </div>
         <div class="grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded border border-slate-200">
           <label class="flex items-center gap-2 text-xs font-bold text-slate-700">
@@ -994,16 +996,16 @@ export class FrameCalculatorApp {
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">${t.forceFxLabel}</label>
-            <input type="number" id="inpAddNodalFx" step="1" class="poly-input text-left font-mono font-bold text-sm px-3 py-2 text-red-600" value="0">
+            <input type="number" id="inpAddNodalFx" step="1" class="poly-input text-left font-mono font-bold text-sm px-3 py-2 text-red-600" value="0" placeholder="0">
           </div>
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">${t.forceFzLabel}</label>
-            <input type="number" id="inpAddNodalFz" step="1" class="poly-input text-left font-mono font-bold text-sm px-3 py-2 text-red-600" value="10">
+            <input type="number" id="inpAddNodalFz" step="1" class="poly-input text-left font-mono font-bold text-sm px-3 py-2 text-red-600" value="0" placeholder="0">
           </div>
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">${t.momentMLabel}</label>
-          <input type="number" id="inpAddNodalM" step="1" class="poly-input text-left font-mono font-bold text-sm px-3 py-2 text-amber-600" value="0">
+          <input type="number" id="inpAddNodalM" step="1" class="poly-input text-left font-mono font-bold text-sm px-3 py-2 text-amber-600" value="0" placeholder="0">
         </div>
       </div>
     `;
@@ -1037,11 +1039,11 @@ export class FrameCalculatorApp {
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">${t.distQxLabel}</label>
-            <input type="number" id="inpAddDistQx" step="1" class="poly-input text-left font-mono font-bold text-sm px-3 py-2 text-red-600" value="0">
+            <input type="number" id="inpAddDistQx" step="1" class="poly-input text-left font-mono font-bold text-sm px-3 py-2 text-red-600" value="0" placeholder="0">
           </div>
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">${t.distQzLabel}</label>
-            <input type="number" id="inpAddDistQz" step="1" class="poly-input text-left font-mono font-bold text-sm px-3 py-2 text-red-600" value="-10">
+            <input type="number" id="inpAddDistQz" step="1" class="poly-input text-left font-mono font-bold text-sm px-3 py-2 text-red-600" value="0" placeholder="0">
           </div>
         </div>
       </div>
@@ -1218,6 +1220,70 @@ export class FrameCalculatorApp {
       }
     }
     return false;
+  }
+
+  initDraggableModals() {
+    const modalIds = ['modalCalcDetails', 'modalTemplates', 'modalAddElement'];
+
+    modalIds.forEach(id => {
+      const overlay = document.getElementById(id);
+      if (!overlay) return;
+      const content = overlay.querySelector('.modal-content');
+      const header = overlay.querySelector('.modal-header');
+      if (!content || !header) return;
+
+      let isDragging = false;
+      let startX = 0, startY = 0;
+      let currentX = 0, currentY = 0;
+
+      const onPointerDown = (e) => {
+        // Do not drag if clicking interactive buttons / inputs / links
+        if (e.target.closest('button, input, select, textarea, a, .btn-icon-del')) return;
+
+        isDragging = true;
+        const clientX = e.clientX ?? (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
+        const clientY = e.clientY ?? (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
+        startX = clientX - currentX;
+        startY = clientY - currentY;
+        header.style.cursor = 'grabbing';
+        document.body.style.userSelect = 'none';
+      };
+
+      const onPointerMove = (e) => {
+        if (!isDragging) return;
+        const clientX = e.clientX ?? (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
+        const clientY = e.clientY ?? (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
+        currentX = clientX - startX;
+        currentY = clientY - startY;
+        content.style.transform = `translate(${currentX}px, ${currentY}px)`;
+      };
+
+      const onPointerUp = () => {
+        if (isDragging) {
+          isDragging = false;
+          header.style.cursor = 'grab';
+          document.body.style.userSelect = '';
+        }
+      };
+
+      header.addEventListener('mousedown', onPointerDown);
+      document.addEventListener('mousemove', onPointerMove);
+      document.addEventListener('mouseup', onPointerUp);
+
+      header.addEventListener('touchstart', onPointerDown, { passive: true });
+      document.addEventListener('touchmove', onPointerMove, { passive: false });
+      document.addEventListener('touchend', onPointerUp);
+
+      // Reset modal position to center whenever it is opened / closed
+      const observer = new MutationObserver(() => {
+        if (!overlay.classList.contains('open')) {
+          currentX = 0;
+          currentY = 0;
+          content.style.transform = '';
+        }
+      });
+      observer.observe(overlay, { attributes: true, attributeFilter: ['class'] });
+    });
   }
 
   exportPNG() {

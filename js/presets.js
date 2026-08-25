@@ -94,7 +94,7 @@ export const PRESETS = [
   {
     id: 'gable_pitched_frame',
     name: {
-      en: '4. Gable / Pitched Roof Frame (Dwuprzegubowa rama dwuspadowa)',
+      en: '4. Gable / Pitched Roof Frame',
       pl: '4. Rama dwuspadowa (Kalenicowa ze skosami)'
     },
     description: {
@@ -126,7 +126,7 @@ export const PRESETS = [
   {
     id: 'two_bay_frame',
     name: {
-      en: '5. Two-Bay Continuous Frame (Rama dwunawowa z trzema słupami)',
+      en: '5. Two-Bay Continuous Frame',
       pl: '5. Rama dwunawowa (3 słupy, 2 przęsła)'
     },
     description: {

@@ -29,7 +29,7 @@ export class FrameRenderer {
     this.cursorPos = null;
     this.lang = 'en';
 
-    this.padding = { left: 90, right: 90, top: 65, bottom: 65 };
+    this.padding = { left: 110, right: 110, top: 85, bottom: 85 };
     this.transform = { scale: 40, offsetX: 100, offsetY: 100 };
 
     // Zoom & Pan state
@@ -118,6 +118,9 @@ export class FrameRenderer {
   setupListeners() {
     this.canvas.addEventListener('mousedown', (e) => {
       if (e.button === 0 || e.button === 1) {
+        // If in draw mode, let draw mode handler process click
+        if (this.isDrawNodeMode || this.isDrawElementMode) return;
+
         this.isDragging = true;
         this.dragStartX = e.clientX;
         this.dragStartY = e.clientY;
@@ -127,7 +130,10 @@ export class FrameRenderer {
     });
 
     window.addEventListener('mouseup', () => {
-      this.isDragging = false;
+      if (this.isDragging) {
+        this.isDragging = false;
+        this.canvas.style.cursor = this.isDrawNodeMode ? 'crosshair' : (this.isDrawElementMode ? 'pointer' : 'default');
+      }
     });
 
     this.canvas.addEventListener('click', (e) => {
@@ -312,15 +318,21 @@ export class FrameRenderer {
       if (z > maxZ) maxZ = z;
     });
 
-    // Use comfortable minimum span (at least 6m x 4m) so single node or small spans never zoom in excessively
-    const spanX = Math.max(maxX - minX, 6.0);
-    const spanZ = Math.max(maxZ - minZ, 4.0);
+    const rawSpanX = maxX - minX;
+    const rawSpanZ = maxZ - minZ;
+
+    // Use minimum virtual span (0.8m) if structure is a single column/beam so we don't divide by zero
+    const spanX = Math.max(rawSpanX, 0.8);
+    const spanZ = Math.max(rawSpanZ, 0.8);
 
     const availW = Math.max(50, this.width - this.padding.left - this.padding.right);
     const availH = Math.max(50, this.height - this.padding.top - this.padding.bottom);
 
-    // Fit to 90% of available viewport to give comfortable breathing room for diagrams and reactions
-    const scale = Math.min(availW / spanX, availH / spanZ) * 0.90;
+    // Calculate fit scale so structure comfortably fills ~78% of canvas with breathing room for annotations
+    let fitScale = Math.min(availW / spanX, availH / spanZ) * 0.78;
+
+    // Cap scale between reasonable bounds: at least 15 px/m for massive frames, at most 260 px/m for compact 1m frames
+    const scale = Math.max(15, Math.min(fitScale, 260));
 
     const midX = (minX + maxX) / 2;
     const midZ = (minZ + maxZ) / 2;
@@ -401,7 +413,7 @@ export class FrameRenderer {
         }
 
         const N_val = -Ni - qXi * s;
-        const T_val = -Ti - qZeta * s;
+        const T_val = Ti + qZeta * s;
         const M_val = Mi - Ti * s - 0.5 * qZeta * s * s;
 
         // Sample deflection w and axial u from element samples
@@ -808,7 +820,9 @@ export class FrameRenderer {
     }
 
     // 2. Draw Structure Members, Supports, Hinges, Distributed Loads, and Nodal Loads
-    this.drawStructure(1.0);
+    // Rule: Hide external loads in N, T, M diagram views to avoid clutter; show them only in 'reactions' (Structure & Reactions) mode.
+    const showLoads = (mode === 'reactions');
+    this.drawStructure(1.0, showLoads);
 
     // 3. Draw Diagram Value Badges on the absolute TOP layer so they are NEVER shaded or cut through by any beam/arrow!
     if (diagramTags && diagramTags.length) {
@@ -818,7 +832,7 @@ export class FrameRenderer {
     }
   }
 
-  drawStructure(scale = 1.0) {
+  drawStructure(scale = 1.0, showLoads = true) {
     const ctx = this.ctx;
     const nodeMap = new Map();
 
@@ -902,8 +916,10 @@ export class FrameRenderer {
       }
     });
 
-    // 2. Draw Distributed Loads
-    this.drawDistributedLoads(nodeMap, scale);
+    // 2. Draw Distributed Loads (only when showLoads is true)
+    if (showLoads) {
+      this.drawDistributedLoads(nodeMap, scale);
+    }
 
     // 3. Draw Supports at Nodes
     (this.frameData.nodes || []).forEach(node => {
@@ -912,8 +928,10 @@ export class FrameRenderer {
       }
     });
 
-    // 4. Draw Nodal Point Loads
-    this.drawNodalLoads(nodeMap, scale);
+    // 4. Draw Nodal Point Loads (only when showLoads is true)
+    if (showLoads) {
+      this.drawNodalLoads(nodeMap, scale);
+    }
 
     // 5. Draw Node Badges
     (this.frameData.nodes || []).forEach(node => {
