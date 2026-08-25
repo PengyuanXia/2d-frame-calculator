@@ -326,14 +326,14 @@ export class FrameRenderer {
     const midZ = (minZ + maxZ) / 2;
 
     const offsetX = this.width / 2 - midX * scale;
-    const offsetY = this.height / 2 + midZ * scale; // Inverted for z upwards
+    const offsetY = this.height / 2 + midZ * scale;
 
     this.transform = { scale, offsetX, offsetY, minX, maxX, minZ, maxZ, spanX, spanZ };
   }
 
   worldToPixel(x, z) {
     const basePx = x * this.transform.scale + this.transform.offsetX;
-    const basePy = this.transform.offsetY - z * this.transform.scale; // z upwards
+    const basePy = this.transform.offsetY - z * this.transform.scale;
     const centerX = this.width / 2;
     const centerY = this.height / 2;
     return {
@@ -1113,20 +1113,20 @@ export class FrameRenderer {
         this.drawBadgeText(ctx, isRight ? fromX - 6 : fromX + 6, p.py, `Fx=${formatNum(Math.abs(fx))}kN`, '#dc2626', isRight ? 'right' : 'left', '#fca5a5');
       }
 
-      // Vertical Force Fz (>0 upwards, <0 downwards)
+      // Vertical Force Fz (>0 downwards, <0 upwards)
       if (Math.abs(fz) > 1e-4) {
-        const isUpward = fz > 0;
-        const fromY = isUpward ? p.py + arrowLen : p.py - arrowLen;
+        const isDownward = fz > 0;
+        const fromY = isDownward ? p.py - arrowLen : p.py + arrowLen;
         const toY = p.py;
         this.drawArrow(ctx, p.px, fromY, p.px, toY, '#dc2626', 8 * scale, 3 * scale);
 
-        this.drawBadgeText(ctx, p.px, isUpward ? fromY + 12 * scale : fromY - 12 * scale, `Fz=${formatNum(Math.abs(fz))}kN`, '#dc2626', 'center', '#fca5a5');
+        this.drawBadgeText(ctx, p.px, isDownward ? fromY - 12 * scale : fromY + 12 * scale, `Fz=${formatNum(Math.abs(fz))}kN`, '#dc2626', 'center', '#fca5a5');
       }
 
-      // Moment M (clockwise arc if > 0)
+      // Moment M (counter-clockwise arc if > 0, clockwise if < 0)
       if (Math.abs(m) > 1e-4) {
         const radius = 26 * scale;
-        const isClockwise = m > 0;
+        const isClockwise = m < 0; // Positive is counter-clockwise
         this.drawMomentArc(ctx, p.px, p.py, radius, isClockwise, '#d97706', scale);
 
         this.drawBadgeText(ctx, p.px, p.py - radius - 10 * scale, `M=${formatNum(Math.abs(m))}kNm`, '#d97706', 'center', '#fcd34d');
@@ -1156,67 +1156,101 @@ export class FrameRenderer {
       if (Math.abs(qx) < 1e-4 && Math.abs(qz) < 1e-4) return;
 
       ctx.save();
-      const loadH = 28 * scale;
-      const numArrows = Math.max(3, Math.floor(Math.hypot(p2.px - p1.px, p2.py - p1.py) / (40 * scale)));
+      const loadH = 24 * scale;
+      const isInclined = Math.abs(p1.px - p2.px) > 3 && Math.abs(p1.py - p2.py) > 3;
 
-      // If vertical distributed load qz (downwards if qz < 0)
+      // 1. Vertical distributed load qz (Projected onto horizontal span, >0 downwards)
       if (Math.abs(qz) > 1e-4) {
-        const isDownward = qz < 0;
-        const topY1 = isDownward ? p1.py - loadH : p1.py + loadH;
-        const topY2 = isDownward ? p2.py - loadH : p2.py + loadH;
+        const isDownward = qz > 0;
+        const minPx = Math.min(p1.px, p2.px);
+        const maxPx = Math.max(p1.px, p2.px);
+        const spanPx = Math.max(10, maxPx - minPx);
+        const numArrows = Math.max(3, Math.floor(spanPx / (32 * scale)));
+
+        const baseY = isInclined ? Math.min(p1.py, p2.py) : ((p1.py + p2.py) / 2);
+        const topY = isDownward ? baseY - loadH : baseY + loadH;
 
         ctx.strokeStyle = '#ef4444';
-        ctx.lineWidth = 1.8 * scale;
+        ctx.lineWidth = 1.6 * scale;
+
+        // Top horizontal roof line
         ctx.beginPath();
-        ctx.moveTo(p1.px, topY1);
-        ctx.lineTo(p2.px, topY2);
+        ctx.moveTo(minPx, topY);
+        ctx.lineTo(maxPx, topY);
         ctx.stroke();
 
-        for (let i = 0; i <= numArrows; i++) {
-          const ratio = i / numArrows;
-          const curX = p1.px + ratio * (p2.px - p1.px);
-          const curBaseY = p1.py + ratio * (p2.py - p1.py);
-          const curTopY = topY1 + ratio * (topY2 - topY1);
+        // If inclined, draw the horizontal baseline and side borders to form the projected load box
+        if (isInclined) {
+          ctx.beginPath();
+          ctx.moveTo(minPx, baseY);
+          ctx.lineTo(maxPx, baseY);
+          ctx.moveTo(minPx, topY);
+          ctx.lineTo(minPx, baseY);
+          ctx.moveTo(maxPx, topY);
+          ctx.lineTo(maxPx, baseY);
+          ctx.stroke();
+        }
 
+        // Draw vertical load arrows
+        for (let i = 0; i <= numArrows; i++) {
+          const curX = minPx + (i / numArrows) * spanPx;
+          const arrowBaseY = isInclined ? baseY : p1.py + ((curX - p1.px) / (p2.px - p1.px || 1)) * (p2.py - p1.py);
           if (isDownward) {
-            this.drawArrow(ctx, curX, curTopY, curX, curBaseY - 3, '#ef4444', 5 * scale, 1.8 * scale);
+            this.drawArrow(ctx, curX, topY, curX, arrowBaseY - 2, '#ef4444', 4.5 * scale, 1.6 * scale);
           } else {
-            this.drawArrow(ctx, curX, curTopY, curX, curBaseY + 3, '#ef4444', 5 * scale, 1.8 * scale);
+            this.drawArrow(ctx, curX, topY, curX, arrowBaseY + 2, '#ef4444', 4.5 * scale, 1.6 * scale);
           }
         }
 
         ctx.fillStyle = '#b91c1c';
-        ctx.font = `bold ${12 * scale}px 'JetBrains Mono', monospace`;
+        ctx.font = `bold ${11.5 * scale}px 'JetBrains Mono', monospace`;
         ctx.textAlign = 'center';
-        ctx.fillText(`qz = ${formatNum(Math.abs(qz))} kN/m`, (p1.px + p2.px) / 2, Math.min(topY1, topY2) - 6 * scale);
+        ctx.fillText(`qz = ${formatNum(Math.abs(qz))} kN/m`, (minPx + maxPx) / 2, Math.min(topY, baseY) - 5 * scale);
       }
 
-      // If horizontal distributed load qx
+      // 2. Horizontal distributed load qx (Projected onto vertical height)
       if (Math.abs(qx) > 1e-4) {
         const sign = qx > 0 ? 1 : -1;
-        const topX1 = p1.px - sign * loadH;
-        const topX2 = p2.px - sign * loadH;
+        const minPy = Math.min(p1.py, p2.py);
+        const maxPy = Math.max(p1.py, p2.py);
+        const spanPy = Math.max(10, maxPy - minPy);
+        const numArrows = Math.max(3, Math.floor(spanPy / (32 * scale)));
+
+        const baseX = isInclined ? (qx > 0 ? Math.min(p1.px, p2.px) : Math.max(p1.px, p2.px)) : ((p1.px + p2.px) / 2);
+        const outerX = baseX - sign * loadH;
 
         ctx.strokeStyle = '#ef4444';
-        ctx.lineWidth = 1.8 * scale;
+        ctx.lineWidth = 1.6 * scale;
+
+        // Outer vertical line
         ctx.beginPath();
-        ctx.moveTo(topX1, p1.py);
-        ctx.lineTo(topX2, p2.py);
+        ctx.moveTo(outerX, minPy);
+        ctx.lineTo(outerX, maxPy);
         ctx.stroke();
 
-        for (let i = 0; i <= numArrows; i++) {
-          const ratio = i / numArrows;
-          const curY = p1.py + ratio * (p2.py - p1.py);
-          const curBaseX = p1.px + ratio * (p2.px - p1.px);
-          const curTopX = topX1 + ratio * (topX2 - topX1);
+        // If inclined, draw vertical baseline and horizontal borders
+        if (isInclined) {
+          ctx.beginPath();
+          ctx.moveTo(baseX, minPy);
+          ctx.lineTo(baseX, maxPy);
+          ctx.moveTo(outerX, minPy);
+          ctx.lineTo(baseX, minPy);
+          ctx.moveTo(outerX, maxPy);
+          ctx.lineTo(baseX, maxPy);
+          ctx.stroke();
+        }
 
-          this.drawArrow(ctx, curTopX, curY, curBaseX - sign * 3, curY, '#ef4444', 5 * scale, 1.8 * scale);
+        // Draw horizontal load arrows
+        for (let i = 0; i <= numArrows; i++) {
+          const curY = minPy + (i / numArrows) * spanPy;
+          const arrowBaseX = isInclined ? baseX : p1.px + ((curY - p1.py) / (p2.py - p1.py || 1)) * (p2.px - p1.px);
+          this.drawArrow(ctx, outerX, curY, arrowBaseX - sign * 2, curY, '#ef4444', 4.5 * scale, 1.6 * scale);
         }
 
         ctx.fillStyle = '#b91c1c';
-        ctx.font = `bold ${12 * scale}px 'JetBrains Mono', monospace`;
+        ctx.font = `bold ${11.5 * scale}px 'JetBrains Mono', monospace`;
         ctx.textAlign = 'center';
-        ctx.fillText(`qx = ${formatNum(Math.abs(qx))} kN/m`, (topX1 + topX2) / 2, (p1.py + p2.py) / 2 - 6 * scale);
+        ctx.fillText(`qx = ${formatNum(Math.abs(qx))} kN/m`, (outerX + baseX) / 2, minPy - 5 * scale);
       }
 
       ctx.restore();
@@ -1264,10 +1298,10 @@ export class FrameRenderer {
         this.drawBadgeText(ctx, px, baseOffsetY + arrowLen + 12, `Rz=${formatNum(Math.abs(r.Rz))}kN`, '#15803d', 'center');
       }
 
-      // 3. Reaction Moment MR (offset to side of support)
+      // 3. Reaction Moment MR (counter-clockwise arc if > 0, clockwise if < 0)
       if (Math.abs(r.MR) > 1e-3) {
         const radius = 22;
-        const isClockwise = r.MR > 0;
+        const isClockwise = r.MR < 0; // Positive is counter-clockwise
         this.drawMomentArc(ctx, px, py + 12, radius, isClockwise, '#047857', 1.0);
 
         const textX = px - radius - 14;
@@ -1330,19 +1364,6 @@ export class FrameRenderer {
     const maxPlotOffsetPixels = Math.min(65, this.transform.scale * 1.2);
     const valueScale = maxPlotOffsetPixels / (globalMaxAbs || 1);
 
-    // Compute frame centroid in screen space for reliable inside/outside determination
-    let cx = 0, cy = 0, nodeCount = 0;
-    (this.frameData.nodes || []).forEach(n => {
-      const p = this.worldToPixel(n.x, n.z);
-      cx += p.px;
-      cy += p.py;
-      nodeCount++;
-    });
-    if (nodeCount > 0) {
-      cx /= nodeCount;
-      cy /= nodeCount;
-    }
-
     // Global tracker to avoid duplicate and overlapping value tags
     const placedTags = [];
 
@@ -1354,17 +1375,12 @@ export class FrameRenderer {
       const dyPx = pJ.py - pI.py;
       const lenPx = Math.hypot(dxPx, dyPx) || 1;
 
-      // Unit normal vector on canvas (rotated 90 deg clockwise on screen)
-      const nx = -dyPx / lenPx;
-      const ny = dxPx / lenPx;
-
-      // Determine vector pointing towards the INSIDE of the frame (towards centroid)
-      const midX = (pI.px + pJ.px) / 2;
-      const midY = (pI.py + pJ.py) / 2;
-      const toCx = cx - midX;
-      const toCy = cy - midY;
-      const dotInside = nx * toCx + ny * toCy;
-      const insideFactor = dotInside >= 0 ? 1 : -1; // +1 if (nx, ny) points INSIDE, -1 if (nx, ny) points OUTSIDE
+      // Local transverse normal vector in screen space corresponding to +e_zeta (+90 deg in world (x,z)):
+      // In world coords: e_zeta = (-sin, cos) = (-dz/L, dx/L).
+      // On screen: px = x*scale + offX, py = offY - z*scale => d_px = dx*scale, d_py = -dz*scale.
+      // So +e_zeta in screen pixels is: nx = dyPx / lenPx, ny = -dxPx / lenPx.
+      const nx = dyPx / lenPx;
+      const ny = -dxPx / lenPx;
 
       const basePoints = [];
       const diagramPoints = [];
@@ -1372,15 +1388,11 @@ export class FrameRenderer {
       elem.samples.forEach(sample => {
         const pt = this.worldToPixel(sample.x, sample.z);
         const val = sample[type];
-        let offsetAmount = 0;
 
-        if (type === 'N' || type === 'T') {
-          // Rule: Inside is Negative (-), Outside is Positive (+)
-          offsetAmount = -val * insideFactor * valueScale;
-        } else if (type === 'M') {
-          // Rule: Bending moment drawn on TENSION FIBER side (inside for positive sag, outside for negative hog)
-          offsetAmount = val * insideFactor * valueScale;
-        }
+        // Exact physical offset:
+        // For M: val > 0 points along +n_zeta (top/outer tension fiber), val < 0 points along -n_zeta (bottom/inner tension fiber)
+        // For N/T: standard positive along +n_zeta, negative along -n_zeta
+        const offsetAmount = val * valueScale;
 
         const diagX = pt.px + nx * offsetAmount;
         const diagY = pt.py + ny * offsetAmount;
@@ -1424,11 +1436,11 @@ export class FrameRenderer {
       // Annotate End Values (with clearance from member baseline and deduplication)
       const valI = diagramPoints[0].val;
       const valJ = diagramPoints[diagramPoints.length - 1].val;
-      const offsetI = (type === 'N' || type === 'T') ? -valI * insideFactor * valueScale : valI * insideFactor * valueScale;
-      const offsetJ = (type === 'N' || type === 'T') ? -valJ * insideFactor * valueScale : valJ * insideFactor * valueScale;
+      const offsetI = valI * valueScale;
+      const offsetJ = valJ * valueScale;
 
-      this.collectDiagramTag(placedTags, basePoints[0], diagramPoints[0], valI, strokeColor, nx, ny, offsetI);
-      this.collectDiagramTag(placedTags, basePoints[basePoints.length - 1], diagramPoints[diagramPoints.length - 1], valJ, strokeColor, nx, ny, offsetJ);
+      this.collectDiagramTag(placedTags, basePoints[0], diagramPoints[0], valI, strokeColor, nx, ny, offsetI, type);
+      this.collectDiagramTag(placedTags, basePoints[basePoints.length - 1], diagramPoints[diagramPoints.length - 1], valJ, strokeColor, nx, ny, offsetJ, type);
 
       // Extrema value if in middle of member (away from ends)
       const nSamples = diagramPoints.length;
@@ -1438,15 +1450,15 @@ export class FrameRenderer {
       const endIdx = Math.floor(nSamples * 0.8);
       for (let i = startIdx; i <= endIdx; i++) {
         if (Math.abs(diagramPoints[i].val) > Math.abs(maxMidVal) && 
-            Math.abs(diagramPoints[i].val - valI) > 0.5 && 
-            Math.abs(diagramPoints[i].val - valJ) > 0.5) {
+          Math.abs(diagramPoints[i].val - valI) > 0.5 && 
+          Math.abs(diagramPoints[i].val - valJ) > 0.5) {
           maxMidVal = diagramPoints[i].val;
           maxMidIdx = i;
         }
       }
       if (maxMidIdx !== -1 && Math.abs(maxMidVal) > 0.05) {
-        const offsetMid = (type === 'N' || type === 'T') ? -maxMidVal * insideFactor * valueScale : maxMidVal * insideFactor * valueScale;
-        this.collectDiagramTag(placedTags, basePoints[maxMidIdx], diagramPoints[maxMidIdx], maxMidVal, strokeColor, nx, ny, offsetMid);
+        const offsetMid = maxMidVal * valueScale;
+        this.collectDiagramTag(placedTags, basePoints[maxMidIdx], diagramPoints[maxMidIdx], maxMidVal, strokeColor, nx, ny, offsetMid, type);
       }
     });
 
@@ -1454,7 +1466,7 @@ export class FrameRenderer {
     return placedTags;
   }
 
-  collectDiagramTag(tagsToDraw, basePt, diagPt, val, color, nx, ny, offsetAmount) {
+  collectDiagramTag(tagsToDraw, basePt, diagPt, val, color, nx, ny, offsetAmount, type = '') {
     if (Math.abs(val) < 0.05) return;
 
     const dirSign = offsetAmount >= 0 ? 1 : -1;
@@ -1479,7 +1491,7 @@ export class FrameRenderer {
       const dist = Math.hypot(targetX - tag.x, targetY - tag.y);
       if (dist < 42) {
         // If values are equal / near equal at corner (e.g. corner moment equilibrium), skip duplicate!
-        if (Math.abs(val - tag.val) < 0.35) {
+        if (Math.abs(Math.abs(val) - Math.abs(tag.val)) < 0.35) {
           return;
         }
         // If different values (e.g. shear step), shift position
@@ -1487,7 +1499,8 @@ export class FrameRenderer {
       }
     }
 
-    const text = (val > 0 ? '+' : '') + formatNum(val);
+    // Bending moment M is drawn on the tension fiber side with NO sign (+/-)
+    const text = type === 'M' ? formatNum(Math.abs(val)) : ((val > 0 ? '+' : '') + formatNum(val));
     const pad = 5;
     this.ctx.save();
     this.ctx.font = 'bold 11px "JetBrains Mono", monospace';

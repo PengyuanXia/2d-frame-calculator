@@ -49,7 +49,7 @@ export class FrameSolver {
     const K = Array.from({ length: totalDof }, () => new Float64Array(totalDof));
     const F = new Float64Array(totalDof);
 
-    // Apply Direct Nodal Point Loads
+    // Apply Direct Nodal Point Loads (Positive user Fz = Downward)
     this.nodalLoads.forEach(nl => {
       const node = nodeMap.get(nl.nodeId);
       if (node) {
@@ -57,7 +57,7 @@ export class FrameSolver {
         const dofW = node.index * 3 + 1;
         const dofT = node.index * 3 + 2;
         F[dofU] += Number(nl.Fx) || 0;
-        F[dofW] += Number(nl.Fz) || 0;
+        F[dofW] -= Number(nl.Fz) || 0; // Positive user input Fz is downward
         F[dofT] += Number(nl.M) || 0;
       }
     });
@@ -163,17 +163,20 @@ export class FrameSolver {
 
       // Distributed Loads on this Element
       let totalQx = 0;
-      let totalQz = 0;
+      let totalQzGeom = 0;
       for (const dl of this.distLoads) {
         if (dl.elementId === elem.id) {
           totalQx += Number(dl.qx) || 0;
-          totalQz += Number(dl.qz) || 0;
+          // Positive user input qz means DOWNWARD
+          totalQzGeom -= Number(dl.qz) || 0;
         }
       }
 
-      // Local load components
-      const qXi = totalQx * cos + totalQz * sin;        // Local axial
-      const qZeta = -totalQx * sin + totalQz * cos;     // Local transverse
+      // Local load components (Projected onto global X and Z axes)
+      const absCos = Math.abs(cos);
+      const absSin = Math.abs(sin);
+      const qXi = totalQx * absSin * cos + totalQzGeom * absCos * sin;
+      const qZeta = -totalQx * absSin * sin + totalQzGeom * absCos * cos;
 
       // Fixed End Forces f_fixed_local
       const fFixedLocal = new Float64Array(6);
@@ -501,12 +504,11 @@ export class FrameSolver {
         if (dl.elementId === elem.id) {
           const qx = Number(dl.qx) || 0;
           const qz = Number(dl.qz) || 0;
-          const dx = nodeJ.x - nodeI.x;
-          const dz = nodeJ.z - nodeI.z;
-          const L = Math.hypot(dx, dz);
+          const dx = Math.abs(nodeJ.x - nodeI.x);
+          const dz = Math.abs(nodeJ.z - nodeI.z);
           
-          const totalQx = qx * L;
-          const totalQz = qz * L;
+          const totalQx = qx * dz;
+          const totalQz = qz * dx;
           const midX = (nodeI.x + nodeJ.x) / 2;
           const midZ = (nodeI.z + nodeJ.z) / 2;
 

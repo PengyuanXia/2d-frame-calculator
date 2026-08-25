@@ -27,7 +27,7 @@ export const DEFAULT_FRAME = {
   ],
   nodalLoads: [],
   distLoads: [
-    { id: 'D1', elementId: 'E2', qx: 0.0, qz: -10.0, q1: 10.0, q2: 10.0, mode: 'proj_z' } // Downward vertical load qz = -10 kN/m
+    { id: 'D1', elementId: 'E2', qx: 0.0, qz: 10.0, q1: 10.0, q2: 10.0, mode: 'proj_z' } // Downward vertical load qz = 10 kN/m (+z is downward)
   ],
   currentView: 'reactions' // 'reactions', 'normal', 'shear', 'moment'
 };
