@@ -1,0 +1,20 @@
+{
+  "name": "2d-frame-calculator",
+  "version": "1.0.0",
+  "description": "2D Frame Calculator Web App for Civil Engineering Students",
+  "main": "js/ui.js",
+  "scripts": {
+    "start": "python server.py"
+  },
+  "keywords": [
+    "frame",
+    "structural-analysis",
+    "direct-stiffness-method",
+    "civil-engineering",
+    "shear-force",
+    "bending-moment",
+    "normal-force"
+  ],
+  "author": "Civil Engineering Web Tools",
+  "license": "MIT"
+}

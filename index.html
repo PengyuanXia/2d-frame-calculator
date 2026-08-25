@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2D Frame Calculator</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- KaTeX for exact analytical formula rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="css/frame-calculator.css">
+</head>
+<body>
+  <div class="app-container">
+    
+    <!-- 1. Window Title Bar -->
+    <header class="window-title-bar">
+      <div class="flex items-center gap-3">
+        <div class="window-title">
+          <svg style="width: 22px; height: 22px; flex-shrink: 0;" class="text-blue-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+          </svg>
+          <span class="font-bold text-slate-800 text-[14px]" id="appMainTitle">2D Frame Calculator</span>
+        </div>
+        <nav class="window-menu">
+          <button class="menu-btn font-semibold text-blue-700 hover:text-blue-900" id="btnOpenTemplates">📚 Presets</button>
+          <button class="menu-btn opacity-50" id="btnUndo" title="Undo (Ctrl+Z)">↶ Undo</button>
+          <button class="menu-btn opacity-50" id="btnRedo" title="Redo (Ctrl+Y)">↷ Redo</button>
+          <button class="menu-btn" id="btnSaveModel" title="Save frame structure to file">💾 Save</button>
+          <button class="menu-btn" id="btnLoadModel" title="Load frame structure from file">📂 Load</button>
+          <input type="file" id="inpModelFile" accept=".json" style="display: none;">
+          <button class="menu-btn" id="btnShareLink" title="Copy shareable link to clipboard">🔗 Share</button>
+          <button class="menu-btn" id="btnExportPNG">Export PNG</button>
+        </nav>
+      </div>
+      <div class="user-greeting">
+        <span class="font-medium text-slate-600 text-[12.5px]" id="appGreeting">Direct Stiffness Method (EJ = 1)</span>
+      </div>
+    </header>
+
+    <!-- 2. Top Controls Ribbon -->
+    <div class="top-ribbon">
+
+      <div class="ribbon-center">
+        <div class="radio-pill-group">
+          <button class="radio-pill active" data-view="reactions">
+            <span class="radio-dot"></span> Reactions
+          </button>
+          <button class="radio-pill" data-view="normal">
+            <span class="radio-dot"></span> Normal Force N(s)
+          </button>
+          <button class="radio-pill" data-view="shear">
+            <span class="radio-dot"></span> Shear Force T(s)
+          </button>
+          <button class="radio-pill" data-view="moment">
+            <span class="radio-dot"></span> Bending Moment M(s)
+          </button>
+        </div>
+      </div>
+
+      <div class="ribbon-right">
+        <!-- Ko-fi Patron Button -->
+        <a href="https://ko-fi.com/pengyuanxia" target="_blank" rel="noopener noreferrer" class="btn-kofi" id="btnKofi" title="Buy me a coffee on Ko-fi">
+          <svg style="width: 15px; height: 15px; color: #ff5e5b; flex-shrink: 0;" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M23.881 8.948c-.773-4.085-4.859-4.593-4.859-4.593H.723c-.604 0-.679.798-.679.798s-.082 7.324-.022 11.822c.164 2.424 2.586 2.672 2.586 2.672s8.267-.023 11.966-.049c2.438-.426 2.683-2.566 2.658-3.734 4.352.24 7.422-2.831 6.649-6.916zm-11.062 3.511c-1.246 1.453-4.011 3.976-4.011 3.976s-.121.119-.31.023c-.076-.04-.228-.154-.228-.154s-2.738-2.529-3.985-3.982c-1.399-1.631-.77-4.103 1.055-4.582 1.442-.379 2.766.425 3.308 1.404.544-.979 1.868-1.783 3.31-1.404 1.823.479 2.453 2.951 1.053 4.582zm4.721-1.233c-.279.711-.795 1.258-1.542 1.637.042-.903.042-1.896.012-2.883 1.229.07 1.776.536 1.53 1.246z"/>
+          </svg>
+          <span class="font-bold text-[12px]" id="lblKofiText">Buy me a coffee</span>
+        </a>
+
+        <!-- Language Switcher Button near Calculation Report -->
+        <button class="btn-lang" id="btnToggleLang" title="Switch Language (English / Polski)">
+          <span class="text-sm">🌐</span> <strong>EN</strong> / PL
+        </button>
+
+        <!-- Calculation Report Button -->
+        <button class="btn-calc-details" id="btnCalcDetails">
+          <svg class="w-4.5 h-4.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+          </svg>
+          <span id="btnCalcDetailsText">Calculation Report</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 3. Main Workspace Split -->
+    <div class="main-workspace">
+      
+      <!-- Left Sidebar: Direct Tabular Inputs -->
+      <aside class="sidebar-container">
+        <div class="sidebar-scroll">
+          
+          <!-- Nodes Card -->
+          <div class="poly-card">
+            <div class="poly-card-header">
+              <div class="poly-card-title">
+                <svg class="w-4 h-4 text-blue-600 accordion-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+                <span id="lblNodesTitle">Nodes (Coordinates x, z)</span>
+              </div>
+            </div>
+            <div class="poly-card-body">
+              <div class="poly-table-container">
+                <table class="poly-table">
+                  <thead>
+                    <tr>
+                      <th style="width: 22%;">Node</th>
+                      <th style="width: 23%;">x [m]</th>
+                      <th style="width: 23%;">z [m]</th>
+                      <th style="width: 24%;">Support</th>
+                      <th style="width: 8%;"></th>
+                    </tr>
+                  </thead>
+                  <tbody id="tableNodesBody">
+                    <!-- Dynamic Node Rows -->
+                  </tbody>
+                </table>
+              </div>
+              <button class="btn-add" id="btnAddNode">+ Add Node</button>
+            </div>
+          </div>
+
+          <!-- Elements / Members Card -->
+          <div class="poly-card">
+            <div class="poly-card-header">
+              <div class="poly-card-title">
+                <svg class="w-4 h-4 text-blue-600 accordion-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+                <span id="lblElementsTitle">Members (Elements)</span>
+              </div>
+            </div>
+            <div class="poly-card-body">
+              <div class="poly-table-container">
+                <table class="poly-table">
+                  <thead>
+                    <tr>
+                      <th style="width: 20%;">Elem</th>
+                      <th style="width: 24%;">From</th>
+                      <th style="width: 24%;">To</th>
+                      <th style="width: 24%;">Hinges</th>
+                      <th style="width: 8%;"></th>
+                    </tr>
+                  </thead>
+                  <tbody id="tableElementsBody">
+                    <!-- Dynamic Element Rows -->
+                  </tbody>
+                </table>
+              </div>
+              <button class="btn-add" id="btnAddElement">+ Add Member</button>
+            </div>
+          </div>
+
+          <!-- Nodal Loads Card -->
+          <div class="poly-card">
+            <div class="poly-card-header">
+              <div class="poly-card-title">
+                <svg class="w-4 h-4 text-blue-600 accordion-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+                <span id="lblNodalLoadsTitle">Nodal Loads & Moments</span>
+              </div>
+            </div>
+            <div class="poly-card-body">
+              <div class="poly-table-container">
+                <table class="poly-table">
+                  <thead>
+                    <tr>
+                      <th style="width: 24%;">Node</th>
+                      <th style="width: 23%;">Fx [kN]</th>
+                      <th style="width: 23%;">Fz [kN]</th>
+                      <th style="width: 22%;">M [kNm]</th>
+                      <th style="width: 8%;"></th>
+                    </tr>
+                  </thead>
+                  <tbody id="tableNodalLoadsBody">
+                    <!-- Dynamic Nodal Load Rows -->
+                  </tbody>
+                </table>
+              </div>
+              <button class="btn-add" id="btnAddNodalLoad">+ Add Nodal Load</button>
+            </div>
+          </div>
+
+          <!-- Distributed Loads Card -->
+          <div class="poly-card">
+            <div class="poly-card-header">
+              <div class="poly-card-title">
+                <svg class="w-4 h-4 text-blue-600 accordion-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+                <span id="lblDistLoadsTitle">Distributed Loads (qx, qz)</span>
+              </div>
+            </div>
+            <div class="poly-card-body">
+              <div class="poly-table-container">
+                <table class="poly-table">
+                  <thead>
+                    <tr>
+                      <th style="width: 30%;">Elem</th>
+                      <th style="width: 31%;">qx [kN/m]</th>
+                      <th style="width: 31%;">qz [kN/m]</th>
+                      <th style="width: 8%;"></th>
+                    </tr>
+                  </thead>
+                  <tbody id="tableDistLoadsBody">
+                    <!-- Dynamic Distributed Load Rows -->
+                  </tbody>
+                </table>
+              </div>
+              <button class="btn-add" id="btnAddDistLoad">+ Add Distributed Load</button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Sidebar Footer Badge -->
+        <div class="sidebar-footer">
+          <div class="poly-badge">
+            <div class="badge-logo-icon">📐</div>
+            <div>
+              <div class="font-bold text-xs text-slate-800" id="lblSidebarBadge">2D Frame Calculator</div>
+              <div class="text-[10px] text-slate-500 font-semibold" id="lblSidebarSubBadge">Direct Stiffness Method (EJ = 1)</div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Diagram Canvas Area -->
+      <main class="canvas-container">
+        
+        <!-- Canvas Background Watermark -->
+        <div class="student-license-watermark">
+          2D FRAME CALCULATOR
+        </div>
+
+        <!-- Canvas Floating View Toolbar -->
+        <div class="canvas-toolbar-overlay">
+          <button class="tool-btn" onclick="window.app.setViewMode('reactions')">Reactions</button>
+          <button class="tool-btn text-blue-700" onclick="window.app.setViewMode('normal')">N(s)</button>
+          <button class="tool-btn text-red-700" onclick="window.app.setViewMode('shear')">T(s)</button>
+          <button class="tool-btn text-emerald-700" onclick="window.app.setViewMode('moment')">M(s)</button>
+          <div style="width: 1px; height: 16px; background-color: #cbd5e1; margin: 0 4px; align-self: center;"></div>
+          <button class="tool-btn" id="btnZoomIn" title="Zoom In (+)">🔍 +</button>
+          <button class="tool-btn" id="btnZoomOut" title="Zoom Out (-)">🔍 -</button>
+          <button class="tool-btn" id="btnResetZoom" title="Reset View (Fit)">⟲ Fit</button>
+        </div>
+
+        <!-- Coordinate System Indicator Badge in canvas corner -->
+        <div class="coord-badge">
+          <span>&rarr; x (right), &uarr; z (up)</span>
+        </div>
+
+        <!-- HTML5 Canvas Element -->
+        <canvas id="frameCanvas" class="canvas-main"></canvas>
+
+        <!-- Floating Cursor Tooltip -->
+        <div id="cursorTooltip" class="cursor-tooltip" style="display: none;"></div>
+
+        <!-- Floating Draw Action Buttons in bottom-right corner of canvas -->
+        <div class="canvas-bottom-right-controls">
+          <button id="btnDrawElementMode" class="btn-draw-node" title="Click existing nodes to connect them with elements">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 15px; height: 15px;">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4l16 16"></path>
+            </svg>
+            <span id="btnDrawElementText">🔗 Draw Element</span>
+          </button>
+          <button id="btnDrawNodeMode" class="btn-draw-node" title="Click to interactively place nodes on canvas with 0.5m grid snap">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 15px; height: 15px;">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path>
+            </svg>
+            <span id="btnDrawNodeText">➕ Draw Node</span>
+          </button>
+        </div>
+
+        <!-- Canvas Presets Showcase Overlay (Visible on launch & via Presets button) -->
+        <div class="canvas-presets-overlay" id="canvasPresetsOverlay">
+          <div class="presets-hero-content">
+            <div class="presets-hero-header">
+              <div class="presets-hero-badge">
+                <span>📐 Direct Stiffness Method Frame Engine</span>
+              </div>
+              <h2 class="presets-hero-title" id="heroWelcomeTitle">
+                Select a Frame Configuration to Start
+              </h2>
+              <p class="presets-hero-subtitle" id="heroWelcomeSubtitle">
+                Choose a benchmark template to instantly view reactions, Normal Force N, Shear Force T, and Bending Moment M diagrams.
+              </p>
+            </div>
+
+            <!-- Quick Preset Cards Grid -->
+            <div class="hero-presets-grid" id="heroPresetsGrid">
+              <!-- Injected dynamically by JS -->
+            </div>
+          </div>
+        </div>
+
+      </main>
+
+    </div>
+
+    <!-- 4. Bottom Status Bar -->
+    <footer class="status-bar">
+      <div class="status-left">
+        <div class="status-item">
+          <span class="status-val text-slate-700" id="statusElem">Elem: -</span>
+        </div>
+        <div class="status-item">
+          <span class="status-val text-blue-700" id="statusN">N = -</span>
+        </div>
+        <div class="status-item">
+          <span class="status-val text-red-700" id="statusT">T = -</span>
+        </div>
+        <div class="status-item">
+          <span class="status-val text-emerald-700" id="statusM">M = -</span>
+        </div>
+      </div>
+
+      <div class="status-right" id="statusEquilibrium">
+        <span class="status-badge-ok">✓ Statically Determinate</span>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- Modal: Calculation Details -->
+  <div class="modal-overlay" id="modalCalcDetails">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title">
+          <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+          </svg>
+          <span id="lblCalcReportModalTitle">Frame Structural Calculation Report</span>
+        </div>
+        <button class="btn-icon-del text-base" id="btnCloseCalcModal">✕</button>
+      </div>
+      <div class="modal-body font-mono text-sm leading-relaxed" id="modalCalcBody">
+        <!-- Injected dynamically by stepByStep.js -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" id="btnPrintCalcModalFooter" onclick="window.print()">🖨 Print Report</button>
+        <button class="btn-primary" id="btnCloseCalcModalFooter">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Presets -->
+  <div class="modal-overlay" id="modalTemplates">
+    <div class="modal-content" style="max-width: 720px;">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span id="lblPresetsModalTitle">📚 Benchmark Frame Presets</span>
+        </div>
+        <button class="btn-icon-del text-base" id="btnCloseTemplatesModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="space-y-3" id="templatesList">
+          <!-- Preset Cards -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Add Element (Node, Member, Nodal Load, Distributed Load) -->
+  <div class="modal-overlay" id="modalAddElement">
+    <div class="modal-content" style="max-width: 480px;">
+      <div class="modal-header">
+        <div class="modal-title">
+          <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+          </svg>
+          <span id="lblAddElementModalTitle">Add Element</span>
+        </div>
+        <button class="btn-icon-del text-base" id="btnCloseAddElementModal">✕</button>
+      </div>
+      <div class="modal-body" id="modalAddElementBody">
+        <!-- Form injected dynamically based on element type -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" id="btnCancelAddElement">Cancel</button>
+        <button class="btn-primary" id="btnConfirmAddElement">Add to Frame</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Floating Notification -->
+  <div id="toastNotification" class="toast-notification"></div>
+
+  <!-- Main Module -->
+  <script type="module" src="js/ui.js"></script>
+</body>
+</html>
