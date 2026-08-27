@@ -106,7 +106,7 @@ export class FrameRenderer {
 
   findNodeAtPixel(px, py) {
     if (!this.frameData || !this.frameData.nodes) return null;
-    const hitRadius = 14;
+    const hitRadius = 24; // Generous 24px hit radius
     for (const node of this.frameData.nodes) {
       const p = this.worldToPixel(Number(node.x) || 0, Number(node.z) || 0);
       const dist = Math.hypot(px - p.px, py - p.py);
@@ -116,44 +116,21 @@ export class FrameRenderer {
   }
 
   setupListeners() {
-    this.canvas.addEventListener('mousedown', (e) => {
-      this.dragStartX = e.clientX;
-      this.dragStartY = e.clientY;
+    let lastActionTimestamp = 0;
 
-      if (e.button === 0 || e.button === 1) {
-        // If in draw mode, do not initiate pan dragging
-        if (this.isDrawNodeMode || this.isDrawElementMode) return;
+    const handleCanvasAction = (clientX, clientY) => {
+      const now = Date.now();
+      if (now - lastActionTimestamp < 120) return; // Prevent double trigger
+      lastActionTimestamp = now;
 
-        this.isDragging = true;
-        this.initialPanX = this.panX;
-        this.initialPanY = this.panY;
-      }
-    });
-
-    window.addEventListener('mouseup', () => {
-      if (this.isDragging) {
-        this.isDragging = false;
-        this.canvas.style.cursor = this.isDrawNodeMode ? 'crosshair' : (this.isDrawElementMode ? 'pointer' : 'default');
-      }
-    });
-
-    // Right-click cancels the active element connection chain
-    this.canvas.addEventListener('contextmenu', (e) => {
-      if (this.isDrawElementMode && this.drawElemStartNodeId) {
-        e.preventDefault();
-        this.drawElemStartNodeId = null;
-        this.draw();
-      }
-    });
-
-    this.canvas.addEventListener('click', (e) => {
       const rect = this.canvas.getBoundingClientRect();
-      const pixelX = e.clientX - rect.left;
-      const pixelY = e.clientY - rect.top;
+      const pixelX = clientX - rect.left;
+      const pixelY = clientY - rect.top;
 
-      // Draw Element Mode: click on existing nodes (continuous chaining)
+      // 1. Draw Element Mode: click on existing nodes (continuous chaining)
       if (this.isDrawElementMode && this.onElementCreated) {
-        const hitNode = this.findNodeAtPixel(pixelX, pixelY);
+        const hitNode = this.findNodeAtPixel(pixelX, pixelY) ||
+          (this.drawElemHoverNodeId ? (this.frameData.nodes || []).find(n => n.id === this.drawElemHoverNodeId) : null);
         if (!hitNode) return;
 
         if (!this.drawElemStartNodeId) {
@@ -173,12 +150,66 @@ export class FrameRenderer {
         return;
       }
 
-      // Draw Node Mode: click on canvas to place node
+      // 2. Draw Node Mode: click on canvas to place node
       if (this.isDrawNodeMode && this.onNodePlaced) {
         const worldPos = this.pixelToWorld(pixelX, pixelY);
         const snapX = Math.round(worldPos.x * 2) / 2;
         const snapZ = Math.round(worldPos.z * 2) / 2;
         this.onNodePlaced(snapX, snapZ);
+        return;
+      }
+    };
+
+    this.canvas.addEventListener('mousedown', (e) => {
+      this.dragStartX = e.clientX;
+      this.dragStartY = e.clientY;
+
+      if (e.button === 0 || e.button === 1) {
+        // If in draw mode, do not initiate pan dragging
+        if (this.isDrawNodeMode || this.isDrawElementMode) return;
+
+        this.isDragging = true;
+        this.initialPanX = this.panX;
+        this.initialPanY = this.panY;
+      }
+    });
+
+    this.canvas.addEventListener('pointerdown', (e) => {
+      this.dragStartX = e.clientX;
+      this.dragStartY = e.clientY;
+    });
+
+    window.addEventListener('mouseup', () => {
+      if (this.isDragging) {
+        this.isDragging = false;
+        this.canvas.style.cursor = this.isDrawNodeMode ? 'crosshair' : (this.isDrawElementMode ? 'pointer' : 'default');
+      }
+    });
+
+    // Right-click cancels the active element connection chain
+    this.canvas.addEventListener('contextmenu', (e) => {
+      if (this.isDrawElementMode && this.drawElemStartNodeId) {
+        e.preventDefault();
+        this.drawElemStartNodeId = null;
+        this.draw();
+      }
+    });
+
+    // Pointerup handler (ensures reliable trigger even if mouse moved slightly during click)
+    this.canvas.addEventListener('pointerup', (e) => {
+      if (e.button !== 0) return;
+      if (this.isDrawNodeMode || this.isDrawElementMode) {
+        const moveDist = Math.hypot(e.clientX - this.dragStartX, e.clientY - this.dragStartY);
+        if (moveDist < 12) {
+          handleCanvasAction(e.clientX, e.clientY);
+        }
+      }
+    });
+
+    // Standard click handler fallback
+    this.canvas.addEventListener('click', (e) => {
+      if (this.isDrawNodeMode || this.isDrawElementMode) {
+        handleCanvasAction(e.clientX, e.clientY);
         return;
       }
 

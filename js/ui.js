@@ -4,12 +4,12 @@
  * Undo / Redo history, modal dialogs, URL share link, JSON save/load, EN/PL i18n.
  */
 
-import { DEFAULT_FRAME, SUPPORT_TYPES } from './constants.js';
-import { FrameSolver } from './frameSolver.js';
-import { FrameRenderer } from './renderer.js';
-import { generateStepByStepReport } from './stepByStep.js';
-import { PRESETS, EMPTY_FRAME_PRESET } from './presets.js';
-import { TRANSLATIONS, getSavedLanguage, setSavedLanguage } from './i18n.js';
+import { DEFAULT_FRAME, SUPPORT_TYPES } from './constants.js?v=2.2';
+import { FrameSolver } from './frameSolver.js?v=2.2';
+import { FrameRenderer } from './renderer.js?v=2.2';
+import { generateStepByStepReport } from './stepByStep.js?v=2.2';
+import { PRESETS, EMPTY_FRAME_PRESET } from './presets.js?v=2.2';
+import { TRANSLATIONS, getSavedLanguage, setSavedLanguage } from './i18n.js?v=2.2';
 
 function formatNum(val, maxDec = 2) {
   if (val === null || val === undefined || isNaN(val)) return '-';
@@ -465,8 +465,11 @@ export class FrameCalculatorApp {
 
   setDrawNodeMode(enabled) {
     this.isDrawNodeMode = enabled;
-    if (enabled && this.isDrawElementMode) {
-      this.setDrawElementMode(false);
+    if (enabled) {
+      this.hideHeroOverlay();
+      if (this.isDrawElementMode) {
+        this.setDrawElementMode(false);
+      }
     }
     const btn = document.getElementById('btnDrawNodeMode');
     const txt = document.getElementById('btnDrawNodeText');
@@ -493,8 +496,11 @@ export class FrameCalculatorApp {
 
   setDrawElementMode(enabled) {
     this.isDrawElementMode = enabled;
-    if (enabled && this.isDrawNodeMode) {
-      this.setDrawNodeMode(false);
+    if (enabled) {
+      this.hideHeroOverlay();
+      if (this.isDrawNodeMode) {
+        this.setDrawNodeMode(false);
+      }
     }
     const btn = document.getElementById('btnDrawElementMode');
     const txt = document.getElementById('btnDrawElementText');
@@ -695,7 +701,17 @@ export class FrameCalculatorApp {
       tr.querySelectorAll('input').forEach(inp => {
         inp.addEventListener('change', (e) => {
           const field = e.target.dataset.field;
+          const oldId = this.frameData.nodes[idx].id;
           const val = field === 'id' ? e.target.value.trim() : (parseFloat(e.target.value) || 0);
+          if (field === 'id' && val && val !== oldId) {
+            (this.frameData.elements || []).forEach(el => {
+              if (el.nodeI === oldId) el.nodeI = val;
+              if (el.nodeJ === oldId) el.nodeJ = val;
+            });
+            (this.frameData.nodalLoads || []).forEach(nl => {
+              if (nl.nodeId === oldId) nl.nodeId = val;
+            });
+          }
           this.frameData.nodes[idx][field] = val;
           this.recalculate(true);
         });
@@ -707,7 +723,10 @@ export class FrameCalculatorApp {
       });
 
       tr.querySelector('.btn-icon-del').addEventListener('click', () => {
+        const delId = this.frameData.nodes[idx].id;
         this.frameData.nodes.splice(idx, 1);
+        this.frameData.elements = (this.frameData.elements || []).filter(el => el.nodeI !== delId && el.nodeJ !== delId);
+        this.frameData.nodalLoads = (this.frameData.nodalLoads || []).filter(nl => nl.nodeId !== delId);
         this.recalculate(true);
       });
 
@@ -748,7 +767,14 @@ export class FrameCalculatorApp {
       `;
 
       tr.querySelector('input[data-field="id"]').addEventListener('change', (e) => {
-        this.frameData.elements[idx].id = e.target.value.trim();
+        const oldElemId = this.frameData.elements[idx].id;
+        const newElemId = e.target.value.trim();
+        if (newElemId && newElemId !== oldElemId) {
+          (this.frameData.distLoads || []).forEach(dl => {
+            if (dl.elementId === oldElemId) dl.elementId = newElemId;
+          });
+        }
+        this.frameData.elements[idx].id = newElemId;
         this.recalculate(true);
       });
 
@@ -791,7 +817,9 @@ export class FrameCalculatorApp {
       });
 
       tr.querySelector('.btn-icon-del').addEventListener('click', () => {
+        const delElemId = this.frameData.elements[idx].id;
         this.frameData.elements.splice(idx, 1);
+        this.frameData.distLoads = (this.frameData.distLoads || []).filter(dl => dl.elementId !== delElemId);
         this.recalculate(true);
       });
 
