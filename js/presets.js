@@ -32,7 +32,7 @@ export const PRESETS = [
       distLoads: [
         { id: 'D1', elementId: 'E2', qx: 0.0, qz: 10.0, q1: 10.0, q2: 10.0, mode: 'proj_z' }
       ],
-      currentView: 'moment'
+      currentView: 'reactions'
     }
   },
   {
@@ -61,7 +61,7 @@ export const PRESETS = [
         { id: 'L1', nodeId: 'N2', Fx: 20.0, Fz: 0.0, M: 0.0 }
       ],
       distLoads: [],
-      currentView: 'moment'
+      currentView: 'reactions'
     }
   },
   {
@@ -88,7 +88,7 @@ export const PRESETS = [
         { id: 'L1', nodeId: 'N3', Fx: 0.0, Fz: 15.0, M: 0.0 }
       ],
       distLoads: [],
-      currentView: 'moment'
+      currentView: 'reactions'
     }
   },
   {
@@ -120,7 +120,7 @@ export const PRESETS = [
         { id: 'D1', elementId: 'E2', qx: 0.0, qz: 8.0, q1: 8.0, q2: 8.0, mode: 'proj_z' },
         { id: 'D2', elementId: 'E3', qx: 0.0, qz: 8.0, q1: 8.0, q2: 8.0, mode: 'proj_z' }
       ],
-      currentView: 'moment'
+      currentView: 'reactions'
     }
   },
   {
@@ -153,7 +153,7 @@ export const PRESETS = [
       distLoads: [
         { id: 'D1', elementId: 'E2', qx: 0.0, qz: 15.0, q1: 15.0, q2: 15.0, mode: 'proj_z' }
       ],
-      currentView: 'moment'
+      currentView: 'reactions'
     }
   }
 ];
