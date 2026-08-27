@@ -137,12 +137,21 @@ export class FrameRenderer {
       }
     });
 
+    // Right-click cancels the active element connection chain
+    this.canvas.addEventListener('contextmenu', (e) => {
+      if (this.isDrawElementMode && this.drawElemStartNodeId) {
+        e.preventDefault();
+        this.drawElemStartNodeId = null;
+        this.draw();
+      }
+    });
+
     this.canvas.addEventListener('click', (e) => {
       const rect = this.canvas.getBoundingClientRect();
       const pixelX = e.clientX - rect.left;
       const pixelY = e.clientY - rect.top;
 
-      // Draw Element Mode: click on existing nodes
+      // Draw Element Mode: click on existing nodes (continuous chaining)
       if (this.isDrawElementMode && this.onElementCreated) {
         const hitNode = this.findNodeAtPixel(pixelX, pixelY);
         if (!hitNode) return;
@@ -151,12 +160,14 @@ export class FrameRenderer {
           // First click → select start node
           this.drawElemStartNodeId = hitNode.id;
           this.draw();
-        } else {
-          // Second click → create element if different node
-          if (hitNode.id !== this.drawElemStartNodeId) {
-            this.onElementCreated(this.drawElemStartNodeId, hitNode.id);
-          }
+        } else if (hitNode.id === this.drawElemStartNodeId) {
+          // Clicked the active start node again → finish current chain (deselect)
           this.drawElemStartNodeId = null;
+          this.draw();
+        } else {
+          // Clicked a different node → create element and CONTINUE connecting from this node!
+          this.onElementCreated(this.drawElemStartNodeId, hitNode.id);
+          this.drawElemStartNodeId = hitNode.id;
           this.draw();
         }
         return;
@@ -601,8 +612,10 @@ export class FrameRenderer {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     const msg = this.drawElemStartNodeId
-      ? (this.lang === 'pl' ? `② Kliknij węzeł KOŃCOWY (od ${this.drawElemStartNodeId})` : `② Click the END node (from ${this.drawElemStartNodeId})`)
-      : (this.lang === 'pl' ? '① Kliknij węzeł STARTOWY' : '① Click the START node');
+      ? (this.lang === 'pl'
+          ? `Kliknij kolejny węzeł (od ${this.drawElemStartNodeId}) • Kliknij ${this.drawElemStartNodeId} ponownie lub Esc, aby zakończyć`
+          : `Click next node (from ${this.drawElemStartNodeId}) • Click ${this.drawElemStartNodeId} again or Esc to end chain`)
+      : (this.lang === 'pl' ? '① Kliknij węzeł STARTOWY' : '① Click START node to begin');
     ctx.fillText('🔗 ' + msg, this.width / 2, 48);
 
     ctx.restore();

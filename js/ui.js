@@ -259,7 +259,12 @@ export class FrameCalculatorApp {
           this.setDrawNodeMode(false);
         }
         if (this.isDrawElementMode) {
-          this.setDrawElementMode(false);
+          if (this.renderer && this.renderer.drawElemStartNodeId) {
+            this.renderer.drawElemStartNodeId = null;
+            this.renderer.draw();
+          } else {
+            this.setDrawElementMode(false);
+          }
         }
         this.closeAddElementModal();
         this.closeCalcDetailsModal();
@@ -437,7 +442,7 @@ export class FrameCalculatorApp {
 
     const btnDrawElementText = document.getElementById('btnDrawElementText');
     if (btnDrawElementText) {
-      btnDrawElementText.textContent = this.isDrawElementMode ? (t.drawElementBtnActive || '🔗 Click nodes to connect (Esc)') : (t.drawElementBtn || '🔗 Draw Element');
+      btnDrawElementText.textContent = this.isDrawElementMode ? (t.drawElementBtnActive || '🔗 Create Elements (Esc)') : (t.drawElementBtn || '🔗 Create Elements');
     }
 
     const btnClearCanvasText = document.getElementById('btnClearCanvasText');
@@ -498,10 +503,10 @@ export class FrameCalculatorApp {
     if (btn) {
       if (enabled) {
         btn.classList.add('active');
-        if (txt) txt.textContent = t.drawElementBtnActive || '🔗 Click nodes to connect (Esc)';
+        if (txt) txt.textContent = t.drawElementBtnActive || '🔗 Create Elements (Esc)';
       } else {
         btn.classList.remove('active');
-        if (txt) txt.textContent = t.drawElementBtn || '🔗 Draw Element';
+        if (txt) txt.textContent = t.drawElementBtn || '🔗 Create Elements';
       }
     }
 
