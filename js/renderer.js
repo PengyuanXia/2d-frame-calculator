@@ -237,6 +237,171 @@ export class FrameRenderer {
       this.draw();
     }, { passive: false });
 
+    // ----------------------------------------------------
+    // Touch & Pinch-to-Zoom Gesture Handlers for Tablets
+    // ----------------------------------------------------
+    let touchMode = 'none'; // 'none', 'single', 'pinch'
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let lastTouchX = 0;
+    let lastTouchY = 0;
+    let touchStartPanX = 0;
+    let touchStartPanY = 0;
+    let touchInitialPinchDist = 0;
+    let touchInitialPinchZoom = 1.0;
+    let touchInitialMidX = 0;
+    let touchInitialMidY = 0;
+    let touchInitialPanX = 0;
+    let touchInitialPanY = 0;
+
+    this.canvas.addEventListener('touchstart', (e) => {
+      const rect = this.canvas.getBoundingClientRect();
+
+      if (e.touches.length === 2) {
+        // Two fingers: Pinch-to-zoom & two-finger pan
+        touchMode = 'pinch';
+        const t1 = e.touches[0];
+        const t2 = e.touches[1];
+        const x1 = t1.clientX - rect.left;
+        const y1 = t1.clientY - rect.top;
+        const x2 = t2.clientX - rect.left;
+        const y2 = t2.clientY - rect.top;
+
+        touchInitialPinchDist = Math.hypot(x2 - x1, y2 - y1) || 1;
+        touchInitialPinchZoom = this.zoomFactor;
+        touchInitialMidX = (x1 + x2) / 2;
+        touchInitialMidY = (y1 + y2) / 2;
+        touchInitialPanX = this.panX;
+        touchInitialPanY = this.panY;
+        this.hideTooltip();
+        e.preventDefault();
+      } else if (e.touches.length === 1) {
+        // One finger
+        touchMode = 'single';
+        const touch = e.touches[0];
+        touchStartX = touch.clientX;
+        touchStartY = touch.clientY;
+        lastTouchX = touch.clientX;
+        lastTouchY = touch.clientY;
+        touchStartPanX = this.panX;
+        touchStartPanY = this.panY;
+
+        const pixelX = touch.clientX - rect.left;
+        const pixelY = touch.clientY - rect.top;
+
+        if (this.isDrawNodeMode) {
+          const worldPos = this.pixelToWorld(pixelX, pixelY);
+          const snapX = Math.round(worldPos.x * 2) / 2;
+          const snapZ = Math.round(worldPos.z * 2) / 2;
+          const pSnap = this.worldToPixel(snapX, snapZ);
+          this.drawNodePreview = { x: snapX, z: snapZ, px: pSnap.px, py: pSnap.py };
+          this.hideTooltip();
+          this.draw();
+          e.preventDefault();
+        } else if (this.isDrawElementMode) {
+          const hitNode = this.findNodeAtPixel(pixelX, pixelY);
+          this.drawElemHoverNodeId = hitNode ? hitNode.id : null;
+          this.drawElemMousePx = { px: pixelX, py: pixelY };
+          this.hideTooltip();
+          this.draw();
+          e.preventDefault();
+        }
+      }
+    }, { passive: false });
+
+    this.canvas.addEventListener('touchmove', (e) => {
+      const rect = this.canvas.getBoundingClientRect();
+
+      if (e.touches.length === 2 && touchMode === 'pinch') {
+        e.preventDefault();
+        const t1 = e.touches[0];
+        const t2 = e.touches[1];
+        const x1 = t1.clientX - rect.left;
+        const y1 = t1.clientY - rect.top;
+        const x2 = t2.clientX - rect.left;
+        const y2 = t2.clientY - rect.top;
+
+        const currentDist = Math.hypot(x2 - x1, y2 - y1) || 1;
+        const currentMidX = (x1 + x2) / 2;
+        const currentMidY = (y1 + y2) / 2;
+
+        const scaleRatio = currentDist / touchInitialPinchDist;
+        const newZoom = Math.max(0.2, Math.min(5.0, touchInitialPinchZoom * scaleRatio));
+
+        const factor = newZoom / touchInitialPinchZoom;
+        const basePanX = touchInitialMidX - factor * (touchInitialMidX - touchInitialPanX);
+        const basePanY = touchInitialMidY - factor * (touchInitialMidY - touchInitialPanY);
+
+        this.panX = basePanX + (currentMidX - touchInitialMidX);
+        this.panY = basePanY + (currentMidY - touchInitialMidY);
+        this.zoomFactor = newZoom;
+
+        this.draw();
+        return;
+      }
+
+      if (e.touches.length === 1 && touchMode === 'single') {
+        const touch = e.touches[0];
+        lastTouchX = touch.clientX;
+        lastTouchY = touch.clientY;
+        const pixelX = touch.clientX - rect.left;
+        const pixelY = touch.clientY - rect.top;
+
+        if (this.isDrawNodeMode) {
+          e.preventDefault();
+          const worldPos = this.pixelToWorld(pixelX, pixelY);
+          const snapX = Math.round(worldPos.x * 2) / 2;
+          const snapZ = Math.round(worldPos.z * 2) / 2;
+          const pSnap = this.worldToPixel(snapX, snapZ);
+          this.drawNodePreview = { x: snapX, z: snapZ, px: pSnap.px, py: pSnap.py };
+          this.draw();
+          return;
+        }
+
+        if (this.isDrawElementMode) {
+          e.preventDefault();
+          const hitNode = this.findNodeAtPixel(pixelX, pixelY);
+          this.drawElemHoverNodeId = hitNode ? hitNode.id : null;
+          this.drawElemMousePx = { px: pixelX, py: pixelY };
+          this.draw();
+          return;
+        }
+
+        // Normal mode: 1 finger pan drag
+        const dx = touch.clientX - touchStartX;
+        const dy = touch.clientY - touchStartY;
+        if (Math.hypot(dx, dy) > 5) {
+          e.preventDefault();
+          this.panX = touchStartPanX + dx;
+          this.panY = touchStartPanY + dy;
+          this.draw();
+        }
+      }
+    }, { passive: false });
+
+    this.canvas.addEventListener('touchend', (e) => {
+      if (touchMode === 'pinch') {
+        if (e.touches.length < 2) {
+          touchMode = 'none';
+        }
+        return;
+      }
+
+      if (touchMode === 'single' && e.touches.length === 0) {
+        touchMode = 'none';
+        const dist = Math.hypot(lastTouchX - touchStartX, lastTouchY - touchStartY);
+        if (this.isDrawNodeMode || this.isDrawElementMode) {
+          if (dist < 20) {
+            handleCanvasAction(lastTouchX, lastTouchY);
+          }
+        }
+      }
+    });
+
+    this.canvas.addEventListener('touchcancel', () => {
+      touchMode = 'none';
+    });
+
     this.canvas.addEventListener('mousemove', (e) => {
       const rect = this.canvas.getBoundingClientRect();
       const pixelX = e.clientX - rect.left;
