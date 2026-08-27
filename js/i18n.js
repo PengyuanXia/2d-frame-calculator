@@ -121,6 +121,10 @@ export const TRANSLATIONS = {
     clearCanvasBtn: '🗑️ Clear Canvas',
     clearCanvasTooltip: 'Clear canvas and direct to empty frame preset',
     toastCanvasCleared: '🗑️ Canvas cleared — Empty frame ready',
+    toggleSidebarBtn: 'Panel',
+    toggleSidebarTooltip: 'Toggle left inputs panel (hide/show tables)',
+    sidebarHeaderTitle: 'Model Inputs',
+    btnFloatingOpenPanel: '📋 Panel',
 
     // Status bar & Warnings
     statusDeterminate: '✓ Statically Determinate (n = 0)',
@@ -270,6 +274,10 @@ export const TRANSLATIONS = {
     clearCanvasBtn: '🗑️ Wyczyść płótno',
     clearCanvasTooltip: 'Wyczyść płótno i przejdź do pustego schematu',
     toastCanvasCleared: '🗑️ Płótno wyczyszczone — Pusty schemat gotowy',
+    toggleSidebarBtn: 'Panel',
+    toggleSidebarTooltip: 'Przełącz panel boczny (ukryj/pokaż tabele)',
+    sidebarHeaderTitle: 'Dane modelu',
+    btnFloatingOpenPanel: '📋 Panel',
 
     // Status bar & Warnings
     statusDeterminate: '✓ Układ statycznie wyznaczalny (n = 0)',

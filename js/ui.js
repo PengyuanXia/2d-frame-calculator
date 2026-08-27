@@ -4,12 +4,12 @@
  * Undo / Redo history, modal dialogs, URL share link, JSON save/load, EN/PL i18n.
  */
 
-import { DEFAULT_FRAME, SUPPORT_TYPES } from './constants.js?v=2.4';
-import { FrameSolver } from './frameSolver.js?v=2.4';
-import { FrameRenderer } from './renderer.js?v=2.4';
-import { generateStepByStepReport } from './stepByStep.js?v=2.4';
-import { PRESETS, EMPTY_FRAME_PRESET } from './presets.js?v=2.4';
-import { TRANSLATIONS, getSavedLanguage, setSavedLanguage } from './i18n.js?v=2.4';
+import { DEFAULT_FRAME, SUPPORT_TYPES } from './constants.js?v=2.5';
+import { FrameSolver } from './frameSolver.js?v=2.5';
+import { FrameRenderer } from './renderer.js?v=2.5';
+import { generateStepByStepReport } from './stepByStep.js?v=2.5';
+import { PRESETS, EMPTY_FRAME_PRESET } from './presets.js?v=2.5';
+import { TRANSLATIONS, getSavedLanguage, setSavedLanguage } from './i18n.js?v=2.5';
 
 function formatNum(val, maxDec = 2) {
   if (val === null || val === undefined || isNaN(val)) return '-';
@@ -43,6 +43,11 @@ export class FrameCalculatorApp {
       this.saveHistoryState();
       this.recalculate(false);
       this.showHeroOverlay();
+    }
+
+    // Auto-fold sidebar on portable devices / small screens (<800px)
+    if (window.innerWidth <= 800) {
+      this.toggleSidebar(true);
     }
   }
 
@@ -97,6 +102,16 @@ export class FrameCalculatorApp {
     // Floating Canvas Action Buttons
     this.btnClearCanvas = document.getElementById('btnClearCanvas');
     this.btnClearCanvasText = document.getElementById('btnClearCanvasText');
+
+    // Foldable Sidebar Panel
+    this.isSidebarCollapsed = false;
+    this.sidebarContainer = document.getElementById('sidebarContainer');
+    this.btnToggleSidebar = document.getElementById('btnToggleSidebar');
+    this.btnToggleSidebarText = document.getElementById('btnToggleSidebarText');
+    this.btnCloseSidebar = document.getElementById('btnCloseSidebar');
+    this.btnFloatingOpenSidebar = document.getElementById('btnFloatingOpenSidebar');
+    this.btnFloatingOpenSidebarText = document.getElementById('btnFloatingOpenSidebarText');
+    this.lblSidebarHeaderTitle = document.getElementById('lblSidebarHeaderTitle');
 
     // Make all modals draggable by header
     this.initDraggableModals();
@@ -247,6 +262,17 @@ export class FrameCalculatorApp {
     // Clear Canvas Button (Directs to empty frame preset)
     if (this.btnClearCanvas) {
       this.btnClearCanvas.addEventListener('click', () => this.clearCanvasToEmptyPreset());
+    }
+
+    // Foldable Sidebar Panel Listeners
+    if (this.btnToggleSidebar) {
+      this.btnToggleSidebar.addEventListener('click', () => this.toggleSidebar());
+    }
+    if (this.btnCloseSidebar) {
+      this.btnCloseSidebar.addEventListener('click', () => this.toggleSidebar(true));
+    }
+    if (this.btnFloatingOpenSidebar) {
+      this.btnFloatingOpenSidebar.addEventListener('click', () => this.toggleSidebar(false));
     }
 
     // Keyboard shortcuts
@@ -458,9 +484,43 @@ export class FrameCalculatorApp {
       btnClearCanvas.title = t.clearCanvasTooltip || 'Clear canvas and direct to empty frame preset';
     }
 
+    if (this.lblSidebarHeaderTitle) this.lblSidebarHeaderTitle.textContent = t.sidebarHeaderTitle || 'Model Inputs';
+    if (this.btnToggleSidebarText) this.btnToggleSidebarText.textContent = t.toggleSidebarBtn || 'Panel';
+    if (this.btnToggleSidebar) this.btnToggleSidebar.title = t.toggleSidebarTooltip || 'Toggle left inputs panel (hide/show tables)';
+    if (this.btnFloatingOpenSidebarText) this.btnFloatingOpenSidebarText.textContent = t.btnFloatingOpenPanel || '📋 Panel';
+
     this.renderHeroPresets();
     this.renderTables();
     this.updateUndoRedoButtons();
+  }
+
+  toggleSidebar(forceState) {
+    if (typeof forceState === 'boolean') {
+      this.isSidebarCollapsed = forceState;
+    } else {
+      this.isSidebarCollapsed = !this.isSidebarCollapsed;
+    }
+
+    if (!this.sidebarContainer) this.sidebarContainer = document.getElementById('sidebarContainer');
+    if (!this.btnToggleSidebar) this.btnToggleSidebar = document.getElementById('btnToggleSidebar');
+    if (!this.btnFloatingOpenSidebar) this.btnFloatingOpenSidebar = document.getElementById('btnFloatingOpenSidebar');
+
+    if (this.sidebarContainer) {
+      this.sidebarContainer.classList.toggle('collapsed', this.isSidebarCollapsed);
+    }
+    if (this.btnToggleSidebar) {
+      this.btnToggleSidebar.classList.toggle('active', !this.isSidebarCollapsed);
+    }
+    if (this.btnFloatingOpenSidebar) {
+      this.btnFloatingOpenSidebar.classList.toggle('hidden', !this.isSidebarCollapsed);
+    }
+
+    setTimeout(() => {
+      if (this.renderer) {
+        this.renderer.resize();
+        this.renderer.draw();
+      }
+    }, 260);
   }
 
   toggleDrawNodeMode() {

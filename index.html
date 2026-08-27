@@ -47,6 +47,15 @@
     <!-- 2. Top Controls Ribbon -->
     <div class="top-ribbon">
 
+      <div class="ribbon-left">
+        <button class="btn-toggle-sidebar active" id="btnToggleSidebar" title="Toggle left inputs panel (hide/show tables)">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path>
+          </svg>
+          <span id="btnToggleSidebarText">Panel</span>
+        </button>
+      </div>
+
       <div class="ribbon-center">
         <div class="radio-pill-group">
           <button class="radio-pill active" data-view="reactions">
@@ -92,7 +101,21 @@
     <div class="main-workspace">
       
       <!-- Left Sidebar: Direct Tabular Inputs -->
-      <aside class="sidebar-container">
+      <aside class="sidebar-container" id="sidebarContainer">
+        <!-- Sidebar Header Bar with Title and Collapse Button -->
+        <div class="sidebar-header-bar">
+          <div class="sidebar-header-title">
+            <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+            </svg>
+            <span id="lblSidebarHeaderTitle">Model Inputs</span>
+          </div>
+          <button class="btn-collapse-sidebar" id="btnCloseSidebar" title="Collapse panel">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"></path>
+            </svg>
+          </button>
+        </div>
         <div class="sidebar-scroll">
           
           <!-- Nodes Card -->
@@ -236,6 +259,14 @@
       <!-- Main Diagram Canvas Area -->
       <main class="canvas-container">
         
+        <!-- Floating Button to re-open sidebar when collapsed -->
+        <button id="btnFloatingOpenSidebar" class="btn-floating-open-sidebar hidden" title="Open Model Inputs Panel">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+          </svg>
+          <span id="btnFloatingOpenSidebarText">📋 Panel</span>
+        </button>
+
         <!-- Canvas Background Watermark -->
         <div class="student-license-watermark">
           2D FRAME CALCULATOR
@@ -401,6 +432,6 @@
   <div id="toastNotification" class="toast-notification"></div>
 
   <!-- Main Module -->
-  <script type="module" src="js/ui.js?v=2.4"></script>
+  <script type="module" src="js/ui.js?v=2.5"></script>
 </body>
 </html>
