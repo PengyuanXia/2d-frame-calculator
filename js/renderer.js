@@ -117,13 +117,14 @@ export class FrameRenderer {
 
   setupListeners() {
     this.canvas.addEventListener('mousedown', (e) => {
+      this.dragStartX = e.clientX;
+      this.dragStartY = e.clientY;
+
       if (e.button === 0 || e.button === 1) {
-        // If in draw mode, let draw mode handler process click
+        // If in draw mode, do not initiate pan dragging
         if (this.isDrawNodeMode || this.isDrawElementMode) return;
 
         this.isDragging = true;
-        this.dragStartX = e.clientX;
-        this.dragStartY = e.clientY;
         this.initialPanX = this.panX;
         this.initialPanY = this.panY;
       }
@@ -137,9 +138,6 @@ export class FrameRenderer {
     });
 
     this.canvas.addEventListener('click', (e) => {
-      const moveDist = Math.hypot(e.clientX - this.dragStartX, e.clientY - this.dragStartY);
-      if (moveDist > 6) return;
-
       const rect = this.canvas.getBoundingClientRect();
       const pixelX = e.clientX - rect.left;
       const pixelY = e.clientY - rect.top;
@@ -164,13 +162,18 @@ export class FrameRenderer {
         return;
       }
 
-      // Draw Node Mode: click on canvas
+      // Draw Node Mode: click on canvas to place node
       if (this.isDrawNodeMode && this.onNodePlaced) {
         const worldPos = this.pixelToWorld(pixelX, pixelY);
         const snapX = Math.round(worldPos.x * 2) / 2;
         const snapZ = Math.round(worldPos.z * 2) / 2;
         this.onNodePlaced(snapX, snapZ);
+        return;
       }
+
+      // Normal Mode: ignore click if user dragged the canvas
+      const moveDist = Math.hypot(e.clientX - this.dragStartX, e.clientY - this.dragStartY);
+      if (moveDist > 6) return;
     });
 
     this.canvas.addEventListener('wheel', (e) => {
