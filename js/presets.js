@@ -157,3 +157,22 @@ export const PRESETS = [
     }
   }
 ];
+
+export const EMPTY_FRAME_PRESET = {
+  id: 'empty_frame',
+  name: {
+    en: 'Empty Frame (Create from Scratch)',
+    pl: 'Pusty schemat (Czysta rama)'
+  },
+  description: {
+    en: 'Start with a completely empty canvas with no preset elements to build your structure from scratch.',
+    pl: 'Rozpocznij od pustego obszaru bez żadnych zdefiniowanych elementów, aby stworzyć własny schemat od zera.'
+  },
+  data: {
+    nodes: [],
+    elements: [],
+    nodalLoads: [],
+    distLoads: [],
+    currentView: 'reactions'
+  }
+};

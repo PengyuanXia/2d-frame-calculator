@@ -118,6 +118,9 @@ export const TRANSLATIONS = {
     drawElementSelectEnd: '② Click the END node (from {id})',
     toastElementCreated: '🔗 Element {id} created: {n1} → {n2}',
     toastElementDuplicate: '⚠ Element already exists between these nodes',
+    clearCanvasBtn: '🗑️ Clear Canvas',
+    clearCanvasTooltip: 'Clear canvas and direct to empty frame preset',
+    toastCanvasCleared: '🗑️ Canvas cleared — Empty frame ready',
 
     // Status bar & Warnings
     statusDeterminate: '✓ Statically Determinate (n = 0)',
@@ -264,6 +267,9 @@ export const TRANSLATIONS = {
     drawElementSelectEnd: '② Kliknij węzeł KOŃCOWY (od {id})',
     toastElementCreated: '🔗 Pręt {id} utworzony: {n1} → {n2}',
     toastElementDuplicate: '⚠ Pręt już istnieje między tymi węzłami',
+    clearCanvasBtn: '🗑️ Wyczyść płótno',
+    clearCanvasTooltip: 'Wyczyść płótno i przejdź do pustego schematu',
+    toastCanvasCleared: '🗑️ Płótno wyczyszczone — Pusty schemat gotowy',
 
     // Status bar & Warnings
     statusDeterminate: '✓ Układ statycznie wyznaczalny (n = 0)',

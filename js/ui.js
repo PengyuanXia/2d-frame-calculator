@@ -8,7 +8,7 @@ import { DEFAULT_FRAME, SUPPORT_TYPES } from './constants.js';
 import { FrameSolver } from './frameSolver.js';
 import { FrameRenderer } from './renderer.js';
 import { generateStepByStepReport } from './stepByStep.js';
-import { PRESETS } from './presets.js';
+import { PRESETS, EMPTY_FRAME_PRESET } from './presets.js';
 import { TRANSLATIONS, getSavedLanguage, setSavedLanguage } from './i18n.js';
 
 function formatNum(val, maxDec = 2) {
@@ -90,7 +90,9 @@ export class FrameCalculatorApp {
     this.statusElem = document.getElementById('statusElem');
     this.statusN = document.getElementById('statusN');
     this.statusT = document.getElementById('statusT');
-    this.statusEquilibrium = document.getElementById('statusEquilibrium');
+    // Floating Canvas Action Buttons
+    this.btnClearCanvas = document.getElementById('btnClearCanvas');
+    this.btnClearCanvasText = document.getElementById('btnClearCanvasText');
 
     // Make all modals draggable by header
     this.initDraggableModals();
@@ -238,6 +240,11 @@ export class FrameCalculatorApp {
       btnDrawElement.addEventListener('click', () => this.toggleDrawElementMode());
     }
 
+    // Clear Canvas Button (Directs to empty frame preset)
+    if (this.btnClearCanvas) {
+      this.btnClearCanvas.addEventListener('click', () => this.clearCanvasToEmptyPreset());
+    }
+
     // Keyboard shortcuts
     window.addEventListener('keydown', (e) => {
       const isCtrlOrCmd = e.ctrlKey || e.metaKey;
@@ -353,17 +360,7 @@ export class FrameCalculatorApp {
     `;
 
     blankCard.addEventListener('click', () => {
-      this.frameData = {
-        nodes: [],
-        elements: [],
-        nodalLoads: [],
-        distLoads: [],
-        currentView: 'reactions'
-      };
-      this.setViewMode('reactions');
-      this.renderer.resetZoom();
-      this.recalculate(true);
-      this.hideHeroOverlay();
+      this.clearCanvasToEmptyPreset();
     });
 
     this.heroPresetsGrid.appendChild(blankCard);
@@ -441,6 +438,15 @@ export class FrameCalculatorApp {
     const btnDrawElementText = document.getElementById('btnDrawElementText');
     if (btnDrawElementText) {
       btnDrawElementText.textContent = this.isDrawElementMode ? (t.drawElementBtnActive || '🔗 Click nodes to connect (Esc)') : (t.drawElementBtn || '🔗 Draw Element');
+    }
+
+    const btnClearCanvasText = document.getElementById('btnClearCanvasText');
+    if (btnClearCanvasText) {
+      btnClearCanvasText.textContent = t.clearCanvasBtn || '🗑️ Clear Canvas';
+    }
+    const btnClearCanvas = document.getElementById('btnClearCanvas');
+    if (btnClearCanvas) {
+      btnClearCanvas.title = t.clearCanvasTooltip || 'Clear canvas and direct to empty frame preset';
     }
 
     this.renderHeroPresets();
@@ -1104,6 +1110,18 @@ export class FrameCalculatorApp {
     this.renderer.resetZoom();
     this.recalculate(true);
     this.setViewMode(targetView);
+  }
+
+  clearCanvasToEmptyPreset() {
+    this.saveHistoryState();
+    this.loadPreset(EMPTY_FRAME_PRESET);
+    if (this.canvasPresetsOverlay) {
+      this.hideHeroOverlay();
+    }
+    if (window.location.hash) {
+      history.replaceState(null, '', window.location.pathname + window.location.search);
+    }
+    this.showToast(this.t.toastCanvasCleared || '🗑️ Canvas cleared — Empty frame ready');
   }
 
   showToast(message, duration = 3000) {
