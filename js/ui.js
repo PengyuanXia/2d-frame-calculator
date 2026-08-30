@@ -137,10 +137,14 @@ export class FrameCalculatorApp {
     this.lblAutoSplitText = document.getElementById('lblAutoSplitText');
     this.isAutoSplitNodesEnabled = true;
 
-    // Show/Hide structure labels toggle
-    this.chkShowLabels = document.getElementById('chkShowLabels');
-    this.lblShowLabelsText = document.getElementById('lblShowLabelsText');
-    this.lblToggleLabels = document.getElementById('lblToggleLabels');
+    // Show/Hide separate Node & Member labels toggles
+    this.chkShowNodeLabels = document.getElementById('chkShowNodeLabels');
+    this.lblShowNodeLabelsText = document.getElementById('lblShowNodeLabelsText');
+    this.lblToggleNodeLabels = document.getElementById('lblToggleNodeLabels');
+
+    this.chkShowElemLabels = document.getElementById('chkShowElemLabels');
+    this.lblShowElemLabelsText = document.getElementById('lblShowElemLabelsText');
+    this.lblToggleElemLabels = document.getElementById('lblToggleElemLabels');
 
     // Make all modals draggable by header
     this.initDraggableModals();
@@ -299,14 +303,25 @@ export class FrameCalculatorApp {
       });
     }
 
-    // Show/Hide Labels toggle checkbox
-    if (this.chkShowLabels) {
-      this.chkShowLabels.addEventListener('change', () => {
-        const show = this.chkShowLabels.checked;
+    // Show/Hide Node Labels toggle checkbox
+    if (this.chkShowNodeLabels) {
+      this.chkShowNodeLabels.addEventListener('change', () => {
+        const show = this.chkShowNodeLabels.checked;
         if (this.renderer) {
-          this.renderer.setShowLabels(show);
+          this.renderer.setShowNodeLabels(show);
         }
-        this.showToast(show ? (this.t.toastLabelsOn || '🏷️ Structure labels: SHOWN') : (this.t.toastLabelsOff || '🏷️ Structure labels: HIDDEN'));
+        this.showToast(show ? (this.t.toastNodeLabelsOn || '📍 Node labels: SHOWN') : (this.t.toastNodeLabelsOff || '📍 Node labels: HIDDEN'));
+      });
+    }
+
+    // Show/Hide Member Labels toggle checkbox
+    if (this.chkShowElemLabels) {
+      this.chkShowElemLabels.addEventListener('change', () => {
+        const show = this.chkShowElemLabels.checked;
+        if (this.renderer) {
+          this.renderer.setShowElemLabels(show);
+        }
+        this.showToast(show ? (this.t.toastElemLabelsOn || '📏 Member labels: SHOWN') : (this.t.toastElemLabelsOff || '📏 Member labels: HIDDEN'));
       });
     }
 
@@ -587,11 +602,18 @@ export class FrameCalculatorApp {
       this.lblAutoSplitToggle.title = t.autoSplitNodesTooltip || 'Auto-create nodes and split members when clicking along existing bars';
     }
 
-    if (this.lblShowLabelsText) {
-      this.lblShowLabelsText.textContent = t.showLabelsBtn || '🏷️ Labels';
+    if (this.lblShowNodeLabelsText) {
+      this.lblShowNodeLabelsText.textContent = t.showNodeLabelsBtn || '📍 Nodes';
     }
-    if (this.lblToggleLabels) {
-      this.lblToggleLabels.title = t.showLabelsTooltip || 'Toggle structure text info (Member IDs, Lengths, Node IDs)';
+    if (this.lblToggleNodeLabels) {
+      this.lblToggleNodeLabels.title = t.showNodeLabelsTooltip || 'Toggle Node IDs (N1, N2...)';
+    }
+
+    if (this.lblShowElemLabelsText) {
+      this.lblShowElemLabelsText.textContent = t.showElemLabelsBtn || '📏 Members';
+    }
+    if (this.lblToggleElemLabels) {
+      this.lblToggleElemLabels.title = t.showElemLabelsTooltip || 'Toggle Member Labels (E1, Lengths...)';
     }
 
     if (this.lblSidebarHeaderTitle) this.lblSidebarHeaderTitle.textContent = t.sidebarHeaderTitle || 'Model Inputs';

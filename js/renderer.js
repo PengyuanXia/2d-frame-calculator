@@ -42,7 +42,8 @@ export class FrameRenderer {
     this.initialPanX = 0;
     this.initialPanY = 0;
     this.isAutoSplitNodesEnabled = true;
-    this.showLabels = true;
+    this.showNodeLabels = true;
+    this.showElemLabels = true;
 
     this.setupListeners();
   }
@@ -60,8 +61,19 @@ export class FrameRenderer {
     this.draw();
   }
 
+  setShowNodeLabels(show) {
+    this.showNodeLabels = !!show;
+    this.draw();
+  }
+
+  setShowElemLabels(show) {
+    this.showElemLabels = !!show;
+    this.draw();
+  }
+
   setShowLabels(show) {
-    this.showLabels = !!show;
+    this.showNodeLabels = !!show;
+    this.showElemLabels = !!show;
     this.draw();
   }
 
@@ -1407,8 +1419,8 @@ export class FrameRenderer {
       ctx.lineTo(endPx, endPy);
       ctx.stroke();
 
-      // Member ID & Length Tag at Midpoint (only when showLabels is true)
-      if (this.showLabels) {
+      // Member ID & Length Tag at Midpoint (only when showElemLabels is true)
+      if (this.showElemLabels) {
         const midX = (p1.px + p2.px) / 2;
         const midY = (p1.py + p2.py) / 2;
         const L_world = Math.hypot(nJ.x - nI.x, nJ.z - nI.z);
@@ -1526,8 +1538,8 @@ export class FrameRenderer {
     ctx.arc(px, py, 4.0 * scale, 0, Math.PI * 2);
     ctx.fill();
 
-    // Node ID Text label (e.g. N1, N4 in blue) - only when showLabels is true
-    if (this.showLabels) {
+    // Node ID Text label (e.g. N1, N4 in blue) - only when showNodeLabels is true
+    if (this.showNodeLabels) {
       ctx.fillStyle = '#2563eb';
       ctx.font = `bold ${12 * scale}px 'JetBrains Mono', monospace`;
       ctx.textAlign = 'left';
