@@ -4,12 +4,12 @@
  * Undo / Redo history, modal dialogs, URL share link, JSON save/load, EN/PL i18n.
  */
 
-import { DEFAULT_FRAME, SUPPORT_TYPES } from './constants.js?v=2.5';
-import { FrameSolver } from './frameSolver.js?v=2.5';
-import { FrameRenderer } from './renderer.js?v=2.5';
-import { generateStepByStepReport } from './stepByStep.js?v=2.5';
-import { PRESETS, EMPTY_FRAME_PRESET } from './presets.js?v=2.5';
-import { TRANSLATIONS, getSavedLanguage, setSavedLanguage } from './i18n.js?v=2.5';
+import { DEFAULT_FRAME, SUPPORT_TYPES } from './constants.js?v=2.6';
+import { FrameSolver } from './frameSolver.js?v=2.6';
+import { FrameRenderer } from './renderer.js?v=2.6';
+import { generateStepByStepReport } from './stepByStep.js?v=2.6';
+import { PRESETS, EMPTY_FRAME_PRESET } from './presets.js?v=2.6';
+import { TRANSLATIONS, getSavedLanguage, setSavedLanguage } from './i18n.js?v=2.6';
 
 function formatNum(val, maxDec = 2) {
   if (val === null || val === undefined || isNaN(val)) return '-';
@@ -467,17 +467,17 @@ export class FrameCalculatorApp {
 
     const btnDrawNodeText = document.getElementById('btnDrawNodeText');
     if (btnDrawNodeText) {
-      btnDrawNodeText.textContent = this.isDrawNodeMode ? (t.drawNodeBtnActive || '📍 Click Canvas to Place Node (Esc)') : (t.drawNodeBtn || '➕ Draw Node');
+      btnDrawNodeText.textContent = this.isDrawNodeMode ? (t.drawNodeBtnActive || 'Draw Nodes (Esc)') : (t.drawNodeBtn || 'Draw Nodes');
     }
 
     const btnDrawElementText = document.getElementById('btnDrawElementText');
     if (btnDrawElementText) {
-      btnDrawElementText.textContent = this.isDrawElementMode ? (t.drawElementBtnActive || '🔗 Create Member (Esc)') : (t.drawElementBtn || '🔗 Create Member');
+      btnDrawElementText.textContent = this.isDrawElementMode ? (t.drawElementBtnActive || 'Create Member (Esc)') : (t.drawElementBtn || 'Create Member');
     }
 
     const btnClearCanvasText = document.getElementById('btnClearCanvasText');
     if (btnClearCanvasText) {
-      btnClearCanvasText.textContent = t.clearCanvasBtn || '🗑️ Clear Canvas';
+      btnClearCanvasText.textContent = t.clearCanvasBtn || 'Clear Canvas';
     }
     const btnClearCanvas = document.getElementById('btnClearCanvas');
     if (btnClearCanvas) {
@@ -542,10 +542,10 @@ export class FrameCalculatorApp {
     if (btn) {
       if (enabled) {
         btn.classList.add('active');
-        if (txt) txt.textContent = t.drawNodeBtnActive || '📍 Click Canvas to Place Node (Esc)';
+        if (txt) txt.textContent = t.drawNodeBtnActive || 'Draw Nodes (Esc)';
       } else {
         btn.classList.remove('active');
-        if (txt) txt.textContent = t.drawNodeBtn || '➕ Draw Node';
+        if (txt) txt.textContent = t.drawNodeBtn || 'Draw Nodes';
       }
     }
 
@@ -573,10 +573,10 @@ export class FrameCalculatorApp {
     if (btn) {
       if (enabled) {
         btn.classList.add('active');
-        if (txt) txt.textContent = t.drawElementBtnActive || '🔗 Create Member (Esc)';
+        if (txt) txt.textContent = t.drawElementBtnActive || 'Create Member (Esc)';
       } else {
         btn.classList.remove('active');
-        if (txt) txt.textContent = t.drawElementBtn || '🔗 Create Member';
+        if (txt) txt.textContent = t.drawElementBtn || 'Create Member';
       }
     }
 
