@@ -125,6 +125,8 @@ export const TRANSLATIONS = {
     toggleSidebarTooltip: 'Toggle left inputs panel (hide/show tables)',
     sidebarHeaderTitle: 'Model Inputs',
     btnFloatingOpenPanel: '📋 Panel',
+    contactBtn: 'Contact',
+    contactTooltip: 'Contact Creator (pengyuan.xia.dokt@pw.edu.pl)',
 
     // Status bar & Warnings
     statusDeterminate: '✓ Statically Determinate (n = 0)',
@@ -278,6 +280,8 @@ export const TRANSLATIONS = {
     toggleSidebarTooltip: 'Przełącz panel boczny (ukryj/pokaż tabele)',
     sidebarHeaderTitle: 'Dane modelu',
     btnFloatingOpenPanel: '📋 Panel',
+    contactBtn: 'Kontakt',
+    contactTooltip: 'Kontakt z autorem (pengyuan.xia.dokt@pw.edu.pl)',
 
     // Status bar & Warnings
     statusDeterminate: '✓ Układ statycznie wyznaczalny (n = 0)',

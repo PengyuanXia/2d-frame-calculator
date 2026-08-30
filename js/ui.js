@@ -4,12 +4,12 @@
  * Undo / Redo history, modal dialogs, URL share link, JSON save/load, EN/PL i18n.
  */
 
-import { DEFAULT_FRAME, SUPPORT_TYPES } from './constants.js?v=2.6';
-import { FrameSolver } from './frameSolver.js?v=2.6';
-import { FrameRenderer } from './renderer.js?v=2.6';
-import { generateStepByStepReport } from './stepByStep.js?v=2.6';
-import { PRESETS, EMPTY_FRAME_PRESET } from './presets.js?v=2.6';
-import { TRANSLATIONS, getSavedLanguage, setSavedLanguage } from './i18n.js?v=2.6';
+import { DEFAULT_FRAME, SUPPORT_TYPES } from './constants.js?v=2.7';
+import { FrameSolver } from './frameSolver.js?v=2.7';
+import { FrameRenderer } from './renderer.js?v=2.7';
+import { generateStepByStepReport } from './stepByStep.js?v=2.7';
+import { PRESETS, EMPTY_FRAME_PRESET } from './presets.js?v=2.7';
+import { TRANSLATIONS, getSavedLanguage, setSavedLanguage } from './i18n.js?v=2.7';
 
 function formatNum(val, maxDec = 2) {
   if (val === null || val === undefined || isNaN(val)) return '-';
@@ -488,6 +488,11 @@ export class FrameCalculatorApp {
     if (this.btnToggleSidebarText) this.btnToggleSidebarText.textContent = t.toggleSidebarBtn || 'Panel';
     if (this.btnToggleSidebar) this.btnToggleSidebar.title = t.toggleSidebarTooltip || 'Toggle left inputs panel (hide/show tables)';
     if (this.btnFloatingOpenSidebarText) this.btnFloatingOpenSidebarText.textContent = t.btnFloatingOpenPanel || '📋 Panel';
+
+    const lblContactText = document.getElementById('lblContactText');
+    if (lblContactText) lblContactText.textContent = t.contactBtn || 'Contact';
+    const btnContact = document.getElementById('btnContact');
+    if (btnContact) btnContact.title = t.contactTooltip || 'Contact Creator (pengyuan.xia.dokt@pw.edu.pl)';
 
     this.renderHeroPresets();
     this.renderTables();
