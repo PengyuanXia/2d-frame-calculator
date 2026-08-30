@@ -702,6 +702,8 @@ export class FrameCalculatorApp {
 
     this.renderer.setDrawElementMode(enabled, (startNodeId, endNodeId) => {
       this.handleInteractiveElementCreated(startNodeId, endNodeId);
+    }, (memberElementId, x, z) => {
+      return this.handleMemberSplitAndConnect(memberElementId, x, z);
     });
   }
 
@@ -762,13 +764,15 @@ export class FrameCalculatorApp {
     });
     const nextId = `E${maxNum + 1}`;
 
+    const isTruss = this.frameData.structureType === 'truss';
+
     this.frameData.elements.push({
       id: nextId,
       nodeI: startNodeId,
       nodeJ: endNodeId,
       EJ: 1.0,
-      hingeI: false,
-      hingeJ: false
+      hingeI: isTruss ? true : false,
+      hingeJ: isTruss ? true : false
     });
 
     const msg = (this.t.toastElementCreated || '🔗 Element {id} created: {n1} → {n2}')
@@ -778,6 +782,105 @@ export class FrameCalculatorApp {
     this.showToast(msg);
 
     this.recalculate(true);
+  }
+
+  /**
+   * Split a member at point (x, z), creating a new node and two sub-members.
+   * Returns the new node ID, or null on failure.
+   */
+  handleMemberSplitAndConnect(memberElementId, x, z) {
+    this.saveHistoryState();
+
+    // Find the member to split
+    const elemIndex = (this.frameData.elements || []).findIndex(el => el.id === memberElementId);
+    if (elemIndex === -1) return null;
+    const originalElem = this.frameData.elements[elemIndex];
+
+    // Check if a node already exists near this point
+    const existing = (this.frameData.nodes || []).find(n => Math.hypot(n.x - x, n.z - z) < 0.05);
+    if (existing) {
+      // Node already exists here — just return it (no split needed)
+      return existing.id;
+    }
+
+    // Generate next node ID
+    let maxNodeNum = 0;
+    (this.frameData.nodes || []).forEach(n => {
+      const match = String(n.id).match(/^N(\d+)$/);
+      if (match) {
+        const num = parseInt(match[1], 10);
+        if (num > maxNodeNum) maxNodeNum = num;
+      }
+    });
+    const newNodeId = `N${maxNodeNum + 1}`;
+
+    // Create the new node
+    this.frameData.nodes.push({
+      id: newNodeId,
+      x: x,
+      z: z,
+      support: 'none'
+    });
+
+    // Generate next two element IDs
+    let maxElemNum = 0;
+    (this.frameData.elements || []).forEach(el => {
+      const match = String(el.id).match(/^E(\d+)$/);
+      if (match) {
+        const num = parseInt(match[1], 10);
+        if (num > maxElemNum) maxElemNum = num;
+      }
+    });
+
+    const isTruss = this.frameData.structureType === 'truss';
+
+    // Create two sub-elements replacing the original
+    const newElem1 = {
+      id: `E${maxElemNum + 1}`,
+      nodeI: originalElem.nodeI,
+      nodeJ: newNodeId,
+      EJ: originalElem.EJ || 1.0,
+      hingeI: isTruss ? true : (originalElem.hingeI || false),
+      hingeJ: isTruss ? true : false  // New mid-node has no hinge by default in frame mode
+    };
+    if (originalElem.EA !== undefined) newElem1.EA = originalElem.EA;
+
+    const newElem2 = {
+      id: `E${maxElemNum + 2}`,
+      nodeI: newNodeId,
+      nodeJ: originalElem.nodeJ,
+      EJ: originalElem.EJ || 1.0,
+      hingeI: isTruss ? true : false,
+      hingeJ: isTruss ? true : (originalElem.hingeJ || false)
+    };
+    if (originalElem.EA !== undefined) newElem2.EA = originalElem.EA;
+
+    // Remove the original element and insert the two new ones
+    this.frameData.elements.splice(elemIndex, 1, newElem1, newElem2);
+
+    // Update any distributed loads that referenced the original element
+    // (reassign to the first sub-element — not perfect but safe)
+    if (this.frameData.distLoads) {
+      for (const dl of this.frameData.distLoads) {
+        if (dl.elementId === memberElementId) {
+          dl.elementId = newElem1.id;
+        }
+      }
+    }
+
+    const t = this.t;
+    const toastMsg = (t.toastMemberSplit || '✂️ Split {origId} → {id1} + {id2} at {nodeId} ({x}, {z})')
+      .replace('{origId}', memberElementId)
+      .replace('{id1}', newElem1.id)
+      .replace('{id2}', newElem2.id)
+      .replace('{nodeId}', newNodeId)
+      .replace('{x}', formatNum(x))
+      .replace('{z}', formatNum(z));
+    this.showToast(toastMsg);
+
+    this.recalculate(true);
+
+    return newNodeId;
   }
 
   setViewMode(mode) {

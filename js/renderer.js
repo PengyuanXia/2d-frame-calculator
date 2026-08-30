@@ -86,12 +86,14 @@ export class FrameRenderer {
     this.draw();
   }
 
-  setDrawElementMode(enabled, onElementCreated) {
+  setDrawElementMode(enabled, onElementCreated, onMemberSplit) {
     this.isDrawElementMode = enabled;
     this.onElementCreated = onElementCreated;
+    this.onMemberSplit = onMemberSplit || null;
     this.drawElemStartNodeId = null;
     this.drawElemMousePx = null;
     this.drawElemHoverNodeId = null;
+    this.drawElemHoverSnap = null;
     if (enabled) {
       this.isDrawNodeMode = false;
       this.onNodePlaced = null;
@@ -115,6 +117,152 @@ export class FrameRenderer {
     return null;
   }
 
+  /**
+   * Find the closest point on any existing member near (pixelX, pixelY).
+   * Applies axis-alignment snap preferences with nearby nodes, then grid snap.
+   * Works directly from frameData.elements (no solution required).
+   * Returns { elementId, x, z, snapType, alignedNodeId } or null.
+   */
+  findSnapPointOnMember(pixelX, pixelY) {
+    if (!this.frameData || !this.frameData.elements || !this.frameData.nodes) return null;
+
+    const worldPos = this.pixelToWorld(pixelX, pixelY);
+    const worldX = worldPos.x;
+    const worldZ = worldPos.z;
+
+    // Build node lookup map
+    const nodeMap = new Map();
+    for (const n of this.frameData.nodes) {
+      nodeMap.set(n.id, { x: Number(n.x) || 0, z: Number(n.z) || 0 });
+    }
+
+    // Hit threshold in world units (0.5m scaled by zoom — tighter when zoomed in)
+    const hitThreshold = 0.5 / Math.max(this.zoomFactor, 0.5);
+
+    let bestDist = Infinity;
+    let bestProjection = null;
+
+    for (const elem of this.frameData.elements) {
+      const nI = nodeMap.get(elem.nodeI);
+      const nJ = nodeMap.get(elem.nodeJ);
+      if (!nI || !nJ) continue;
+
+      const dx = nJ.x - nI.x;
+      const dz = nJ.z - nI.z;
+      const L = Math.hypot(dx, dz);
+      if (L < 1e-6) continue;
+
+      // Project click onto segment
+      const t = ((worldX - nI.x) * dx + (worldZ - nI.z) * dz) / (L * L);
+      // Exclude endpoints (t near 0 or 1) — those are existing nodes
+      if (t < 0.02 || t > 0.98) continue;
+
+      const projX = nI.x + t * dx;
+      const projZ = nI.z + t * dz;
+      const dist = Math.hypot(worldX - projX, worldZ - projZ);
+
+      if (dist < bestDist && dist < hitThreshold) {
+        bestDist = dist;
+        bestProjection = {
+          elementId: elem.id,
+          element: elem,
+          rawX: projX,
+          rawZ: projZ,
+          t: t,
+          nI: nI,
+          nJ: nJ,
+          dx: dx,
+          dz: dz,
+          L: L
+        };
+      }
+    }
+
+    if (!bestProjection) return null;
+
+    const { elementId, element, rawX, rawZ, nI, nJ, dx, dz, L } = bestProjection;
+    const ALIGN_THRESHOLD = 0.25; // 0.25m tolerance for axis alignment
+
+    // Try axis-aligned snap with all existing nodes
+    let snapX = rawX, snapZ = rawZ;
+    let snapType = 'raw';
+    let alignedNodeId = null;
+
+    // Collect all nodes sorted by distance to the projected point
+    const allNodes = this.frameData.nodes
+      .map(n => ({ id: n.id, x: Number(n.x) || 0, z: Number(n.z) || 0 }))
+      .filter(n => !(n.id === element.nodeI || n.id === element.nodeJ))
+      .sort((a, b) => Math.hypot(a.x - rawX, a.z - rawZ) - Math.hypot(b.x - rawX, b.z - rawZ));
+
+    // Priority 1: Vertical alignment (same x as a nearby node)
+    for (const n of allNodes) {
+      if (Math.abs(n.x - rawX) < ALIGN_THRESHOLD) {
+        // Re-project x=n.x onto the member segment to find z
+        // Parametric: point = nI + t*(nJ - nI), solve for t where x = n.x
+        if (Math.abs(dx) > 1e-6) {
+          const tSnap = (n.x - nI.x) / dx;
+          if (tSnap > 0.01 && tSnap < 0.99) {
+            snapX = n.x;
+            snapZ = nI.z + tSnap * dz;
+            snapType = 'vertical';
+            alignedNodeId = n.id;
+            break;
+          }
+        }
+      }
+    }
+
+    // Priority 2: Horizontal alignment (same z as a nearby node)
+    if (snapType === 'raw') {
+      for (const n of allNodes) {
+        if (Math.abs(n.z - rawZ) < ALIGN_THRESHOLD) {
+          if (Math.abs(dz) > 1e-6) {
+            const tSnap = (n.z - nI.z) / dz;
+            if (tSnap > 0.01 && tSnap < 0.99) {
+              snapX = nI.x + tSnap * dx;
+              snapZ = n.z;
+              snapType = 'horizontal';
+              alignedNodeId = n.id;
+              break;
+            }
+          }
+        }
+      }
+    }
+
+    // Priority 3: Grid snap (0.5m)
+    if (snapType === 'raw') {
+      const gridX = Math.round(rawX * 2) / 2;
+      const gridZ = Math.round(rawZ * 2) / 2;
+
+      // Re-project grid-snapped point back onto member
+      const tGrid = ((gridX - nI.x) * dx + (gridZ - nI.z) * dz) / (L * L);
+      if (tGrid > 0.01 && tGrid < 0.99) {
+        const memberGridX = nI.x + tGrid * dx;
+        const memberGridZ = nI.z + tGrid * dz;
+        // Only use grid snap if the re-projected point is close to the grid point
+        if (Math.hypot(memberGridX - gridX, memberGridZ - gridZ) < 0.3) {
+          snapX = memberGridX;
+          snapZ = memberGridZ;
+          snapType = 'grid';
+        }
+      }
+    }
+
+    // Round final coordinates to avoid floating point noise
+    snapX = Math.round(snapX * 1000) / 1000;
+    snapZ = Math.round(snapZ * 1000) / 1000;
+
+    return {
+      elementId,
+      element,
+      x: snapX,
+      z: snapZ,
+      snapType,      // 'vertical' | 'horizontal' | 'grid' | 'raw'
+      alignedNodeId  // node ID that caused vertical/horizontal alignment, or null
+    };
+  }
+
   setupListeners() {
     let lastActionTimestamp = 0;
 
@@ -127,25 +275,46 @@ export class FrameRenderer {
       const pixelX = clientX - rect.left;
       const pixelY = clientY - rect.top;
 
-      // 1. Draw Element Mode: click on existing nodes (continuous chaining)
+      // 1. Draw Element Mode: click on existing nodes OR snap to member
       if (this.isDrawElementMode && this.onElementCreated) {
         const hitNode = this.findNodeAtPixel(pixelX, pixelY) ||
           (this.drawElemHoverNodeId ? (this.frameData.nodes || []).find(n => n.id === this.drawElemHoverNodeId) : null);
-        if (!hitNode) return;
 
-        if (!this.drawElemStartNodeId) {
-          // First click → select start node
-          this.drawElemStartNodeId = hitNode.id;
-          this.draw();
-        } else if (hitNode.id === this.drawElemStartNodeId) {
-          // Clicked the active start node again → finish current chain (deselect)
-          this.drawElemStartNodeId = null;
-          this.draw();
-        } else {
-          // Clicked a different node → create element and CONTINUE connecting from this node!
-          this.onElementCreated(this.drawElemStartNodeId, hitNode.id);
-          this.drawElemStartNodeId = hitNode.id;
-          this.draw();
+        if (hitNode) {
+          // Clicked on an existing node
+          if (!this.drawElemStartNodeId) {
+            this.drawElemStartNodeId = hitNode.id;
+            this.draw();
+          } else if (hitNode.id === this.drawElemStartNodeId) {
+            this.drawElemStartNodeId = null;
+            this.draw();
+          } else {
+            this.onElementCreated(this.drawElemStartNodeId, hitNode.id);
+            this.drawElemStartNodeId = hitNode.id;
+            this.draw();
+          }
+          return;
+        }
+
+        // No node hit — try snapping to a member and splitting it
+        if (this.onMemberSplit) {
+          const snap = this.findSnapPointOnMember(pixelX, pixelY);
+          if (snap) {
+            const newNodeId = this.onMemberSplit(snap.elementId, snap.x, snap.z);
+            if (newNodeId) {
+              if (!this.drawElemStartNodeId) {
+                // No chain active — use the new node as start
+                this.drawElemStartNodeId = newNodeId;
+              } else {
+                // Chain active — create element to new node and continue chain
+                this.onElementCreated(this.drawElemStartNodeId, newNodeId);
+                this.drawElemStartNodeId = newNodeId;
+              }
+              this.drawElemHoverSnap = null;
+              this.draw();
+            }
+            return;
+          }
         }
         return;
       }
@@ -302,6 +471,11 @@ export class FrameRenderer {
           const hitNode = this.findNodeAtPixel(pixelX, pixelY);
           this.drawElemHoverNodeId = hitNode ? hitNode.id : null;
           this.drawElemMousePx = { px: pixelX, py: pixelY };
+          if (!hitNode && this.onMemberSplit) {
+            this.drawElemHoverSnap = this.findSnapPointOnMember(pixelX, pixelY);
+          } else {
+            this.drawElemHoverSnap = null;
+          }
           this.hideTooltip();
           this.draw();
           e.preventDefault();
@@ -416,12 +590,20 @@ export class FrameRenderer {
         return;
       }
 
-      // Draw Element Mode: track hover node & rubber-band endpoint
+      // Draw Element Mode: track hover node, snap-on-member & rubber-band endpoint
       if (this.isDrawElementMode) {
         const hitNode = this.findNodeAtPixel(pixelX, pixelY);
         this.drawElemHoverNodeId = hitNode ? hitNode.id : null;
         this.drawElemMousePx = { px: pixelX, py: pixelY };
-        this.canvas.style.cursor = hitNode ? 'pointer' : 'crosshair';
+
+        // If no node hit, check for snap-on-member
+        if (!hitNode && this.onMemberSplit) {
+          this.drawElemHoverSnap = this.findSnapPointOnMember(pixelX, pixelY);
+        } else {
+          this.drawElemHoverSnap = null;
+        }
+
+        this.canvas.style.cursor = hitNode ? 'pointer' : (this.drawElemHoverSnap ? 'pointer' : 'crosshair');
         this.hideTooltip();
         this.draw();
         return;
@@ -464,6 +646,7 @@ export class FrameRenderer {
       this.cursorPos = null;
       this.drawNodePreview = null;
       this.drawElemHoverNodeId = null;
+      this.drawElemHoverSnap = null;
       this.drawElemMousePx = null;
       this.hideTooltip();
       this.draw();
@@ -782,17 +965,98 @@ export class FrameRenderer {
       ctx.fillText(node.id, p.px, p.py - 12);
     }
 
-    // Rubber-band line from start node to current mouse position
+    // Snap-on-member indicator (orange dot + alignment line + coordinate badge)
+    let snapPx = null;
+    if (this.drawElemHoverSnap && !this.drawElemHoverNodeId) {
+      const snap = this.drawElemHoverSnap;
+      const pSnap = this.worldToPixel(snap.x, snap.z);
+      snapPx = pSnap;
+
+      // Orange halo
+      ctx.beginPath();
+      ctx.arc(pSnap.px, pSnap.py, 16, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(249, 115, 22, 0.15)';
+      ctx.fill();
+
+      // Orange snap circle
+      ctx.beginPath();
+      ctx.arc(pSnap.px, pSnap.py, 7, 0, Math.PI * 2);
+      ctx.fillStyle = '#f97316';
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Dashed alignment line to the aligned node
+      if (snap.alignedNodeId && (snap.snapType === 'vertical' || snap.snapType === 'horizontal')) {
+        const alignedNode = nodes.find(n => n.id === snap.alignedNodeId);
+        if (alignedNode) {
+          const pAligned = this.worldToPixel(Number(alignedNode.x) || 0, Number(alignedNode.z) || 0);
+          ctx.setLineDash([4, 4]);
+          ctx.strokeStyle = 'rgba(249, 115, 22, 0.5)';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(pSnap.px, pSnap.py);
+          ctx.lineTo(pAligned.px, pAligned.py);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+      }
+
+      // Coordinate badge
+      const coordText = `(${snap.x.toFixed(1)}, ${snap.z.toFixed(1)})`;
+      ctx.font = 'bold 10px "JetBrains Mono", monospace';
+      const textW = ctx.measureText(coordText).width;
+      const badgeX = pSnap.px - textW / 2 - 5;
+      const badgeY = pSnap.py + 14;
+      ctx.fillStyle = 'rgba(249, 115, 22, 0.9)';
+      ctx.beginPath();
+      ctx.roundRect(badgeX, badgeY, textW + 10, 18, 4);
+      ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      ctx.fillText(coordText, pSnap.px, badgeY + 3);
+
+      // Snap type indicator (small text above)
+      const snapLabel = snap.snapType === 'vertical' ? '┃ vertical'
+        : snap.snapType === 'horizontal' ? '━ horizontal'
+        : snap.snapType === 'grid' ? '# grid' : '';
+      if (snapLabel) {
+        ctx.font = '9px Inter, sans-serif';
+        ctx.fillStyle = 'rgba(249, 115, 22, 0.7)';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText(snapLabel, pSnap.px, pSnap.py - 18);
+      }
+    }
+
+    // Rubber-band line from start node to current mouse position or snap point
     if (this.drawElemStartNodeId && this.drawElemMousePx) {
       const startNode = nodes.find(n => n.id === this.drawElemStartNodeId);
       if (startNode) {
         const pStart = this.worldToPixel(Number(startNode.x) || 0, Number(startNode.z) || 0);
-        const endPx = this.drawElemMousePx.px;
-        const endPy = this.drawElemMousePx.py;
+
+        // Determine endpoint: prefer snap point, then hover node, then raw mouse
+        let endPx, endPy;
+        let lineColor;
+        if (this.drawElemHoverNodeId) {
+          endPx = this.drawElemMousePx.px;
+          endPy = this.drawElemMousePx.py;
+          lineColor = '#22c55e';
+        } else if (snapPx) {
+          endPx = snapPx.px;
+          endPy = snapPx.py;
+          lineColor = '#f97316';
+        } else {
+          endPx = this.drawElemMousePx.px;
+          endPy = this.drawElemMousePx.py;
+          lineColor = '#3b82f6';
+        }
 
         // Dashed rubber-band line
         ctx.setLineDash([6, 4]);
-        ctx.strokeStyle = this.drawElemHoverNodeId ? '#22c55e' : '#3b82f6';
+        ctx.strokeStyle = lineColor;
         ctx.lineWidth = 2.5;
         ctx.beginPath();
         ctx.moveTo(pStart.px, pStart.py);
@@ -807,11 +1071,16 @@ export class FrameRenderer {
     ctx.font = 'bold 12.5px Inter, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
-    const msg = this.drawElemStartNodeId
-      ? (this.lang === 'pl'
-          ? `Kliknij kolejny węzeł (od ${this.drawElemStartNodeId}) • Kliknij ${this.drawElemStartNodeId} ponownie lub Esc, aby zakończyć`
-          : `Click next node (from ${this.drawElemStartNodeId}) • Click ${this.drawElemStartNodeId} again or Esc to end chain`)
-      : (this.lang === 'pl' ? '① Kliknij węzeł STARTOWY' : '① Click START node to begin');
+    let msg;
+    if (this.drawElemStartNodeId) {
+      msg = this.lang === 'pl'
+        ? `Kliknij węzeł lub pręt (od ${this.drawElemStartNodeId}) • Esc aby zakończyć`
+        : `Click node or member (from ${this.drawElemStartNodeId}) • Esc to end chain`;
+    } else {
+      msg = this.lang === 'pl'
+        ? '① Kliknij węzeł lub pręt STARTOWY'
+        : '① Click START node or member to begin';
+    }
     ctx.fillText('🔗 ' + msg, this.width / 2, 48);
 
     ctx.restore();
