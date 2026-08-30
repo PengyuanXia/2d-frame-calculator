@@ -138,6 +138,26 @@ export const TRANSLATIONS = {
     copiedBtn: '✓ Copied!',
     toastEmailCopied: '📋 Email copied to clipboard!',
 
+    // Mode Switcher & Truss Mode
+    modeFrameBtn: '🏢 Frame',
+    modeFrameTooltip: '2D Frame Analysis (Axial N, Shear T, Bending M)',
+    modeTrussBtn: '🌉 Truss',
+    modeTrussTooltip: '2D Pin-Jointed Truss Analysis (Axial Force N only)',
+    trussModeHelpTitle: 'What is Truss Mode?',
+    trussHelpModalTitle: 'Truss Mode vs. Frame Mode Guide',
+    trussHelpCardTitle: 'What happens in Truss Mode?',
+    trussHelpCardDesc: 'In Truss Mode, the structure is treated as an idealized pin-jointed planar truss (kratownica płaska).',
+    trussPrinciple1Title: 'Frictionless Pinned Joints',
+    trussPrinciple1Desc: 'Every node connection is an idealized frictionless hinge. No bending moments can be transmitted across joints.',
+    trussPrinciple2Title: 'Pure Axial Forces Only (N)',
+    trussPrinciple2Desc: 'All elements are pure two-force members carrying only axial force N. Shear force T ≡ 0 and bending moment M ≡ 0 along all bars.',
+    trussPrinciple3Title: 'Color Coding & Zero-Force Members',
+    trussPrinciple3Desc: '🔵 Blue: Tension (+N) • 🔴 Red: Compression (-N) • ⚫ Grey [0]: Zero-Force Bars.',
+    trussPrinciple4Title: 'Static Determinacy Formula',
+    trussPrinciple4Desc: 'Standard planar truss determinacy: n = (p + r) - 2k, where p = number of bars, r = support reactions, and k = number of joints.',
+    trussZeroStateShear: 'ℹ️ In an idealized 2D pin-jointed truss, shear forces are identically zero: T(s) ≡ 0',
+    trussZeroStateMoment: 'ℹ️ In an idealized 2D pin-jointed truss, bending moments are identically zero: M(s) ≡ 0',
+
     // Status bar & Warnings
     statusDeterminate: '✓ Statically Determinate (n = 0)',
     statusIndeterminate: '✓ Statically Indeterminate (n = {n})',
@@ -302,6 +322,26 @@ export const TRANSLATIONS = {
     copyBtn: '📋 Kopiuj',
     copiedBtn: '✓ Skopiowano!',
     toastEmailCopied: '📋 Adres e-mail skopiowany do schowka!',
+
+    // Mode Switcher & Truss Mode
+    modeFrameBtn: '🏢 Rama',
+    modeFrameTooltip: 'Analiza ram płaskich (Siły osiowe N, tnące T, momenty M)',
+    modeTrussBtn: '🌉 Kratownica',
+    modeTrussTooltip: 'Analiza kratownic płaskich (Tylko siły osiowe N)',
+    trussModeHelpTitle: 'Co to jest tryb kratownicy?',
+    trussHelpModalTitle: 'Porównanie: Tryb Ramy vs. Tryb Kratownicy',
+    trussHelpCardTitle: 'Co zmienia się w Trybie Kratownicy?',
+    trussHelpCardDesc: 'W trybie kratownicy ustrój jest traktowany jako idealna kratownica płaska z węzłami przegubowymi.',
+    trussPrinciple1Title: 'Idealne Węzły Przegubowe',
+    trussPrinciple1Desc: 'Wszystkie połączenia w węzłach są idealnymi przegubami bez tarcia. Momenty zginające nie są przenoszone przez węzły.',
+    trussPrinciple2Title: 'Wyłącznie Siły Osiowe (N)',
+    trussPrinciple2Desc: 'Wszystkie elementy przenoszą wyłącznie siły osiowe N. Siły tnące T ≡ 0 oraz momenty zginające M ≡ 0 w każdym punkcie prętów.',
+    trussPrinciple3Title: 'Oznaczenia Kolorystyczne i Pręty Zerowe',
+    trussPrinciple3Desc: '🔵 Niebieski: Rozciąganie (+N) • 🔴 Czerwony: Ściskanie (-N) • ⚫ Szary [0]: Pręty zerowe.',
+    trussPrinciple4Title: 'Wyznaczalność Statyczna Kratownicy',
+    trussPrinciple4Desc: 'Stopień statycznej wyznaczalności: n = (p + r) - 2k, gdzie p = liczba prętów, r = liczba składowych reakcji, k = liczba węzłów.',
+    trussZeroStateShear: 'ℹ️ W idealnej kratownicy płaskiej siły tnące są tożsamościowo równe zero: T(s) ≡ 0',
+    trussZeroStateMoment: 'ℹ️ W idealnej kratownicy płaskiej momenty zginające są tożsamościowo równe zero: M(s) ≡ 0',
 
     // Status bar & Warnings
     statusDeterminate: '✓ Układ statycznie wyznaczalny (n = 0)',

@@ -4,12 +4,12 @@
  * Undo / Redo history, modal dialogs, URL share link, JSON save/load, EN/PL i18n.
  */
 
-import { DEFAULT_FRAME, SUPPORT_TYPES } from './constants.js?v=2.9';
-import { FrameSolver } from './frameSolver.js?v=2.9';
-import { FrameRenderer } from './renderer.js?v=2.9';
-import { generateStepByStepReport } from './stepByStep.js?v=2.9';
-import { PRESETS, EMPTY_FRAME_PRESET } from './presets.js?v=2.9';
-import { TRANSLATIONS, getSavedLanguage, setSavedLanguage } from './i18n.js?v=2.9';
+import { DEFAULT_FRAME, SUPPORT_TYPES } from './constants.js?v=3.0';
+import { FrameSolver } from './frameSolver.js?v=3.0';
+import { FrameRenderer } from './renderer.js?v=3.0';
+import { generateStepByStepReport } from './stepByStep.js?v=3.0';
+import { PRESETS, EMPTY_FRAME_PRESET } from './presets.js?v=3.0';
+import { TRANSLATIONS, getSavedLanguage, setSavedLanguage } from './i18n.js?v=3.0';
 
 function formatNum(val, maxDec = 2) {
   if (val === null || val === undefined || isNaN(val)) return '-';
@@ -120,6 +120,16 @@ export class FrameCalculatorApp {
     this.btnCloseContactModalFooter = document.getElementById('btnCloseContactModalFooter');
     this.btnCopyEmail = document.getElementById('btnCopyEmail');
     this.btnCopyEmailText = document.getElementById('btnCopyEmailText');
+
+    // Mode Switcher (Frame vs. Truss) & Help Modal
+    this.btnModeFrame = document.getElementById('btnModeFrame');
+    this.btnModeTruss = document.getElementById('btnModeTruss');
+    this.lblModeFrameText = document.getElementById('lblModeFrameText');
+    this.lblModeTrussText = document.getElementById('lblModeTrussText');
+    this.btnTrussModeHelp = document.getElementById('btnTrussModeHelp');
+    this.modalTrussHelp = document.getElementById('modalTrussHelp');
+    this.btnCloseTrussHelpModal = document.getElementById('btnCloseTrussHelpModal');
+    this.btnCloseTrussHelpModalFooter = document.getElementById('btnCloseTrussHelpModalFooter');
 
     // Make all modals draggable by header
     this.initDraggableModals();
@@ -302,6 +312,28 @@ export class FrameCalculatorApp {
       });
     }
 
+    // Mode Switcher (Frame vs. Truss) & Educational Help Modal Listeners
+    if (this.btnModeFrame) {
+      this.btnModeFrame.addEventListener('click', () => this.setStructureType('frame'));
+    }
+    if (this.btnModeTruss) {
+      this.btnModeTruss.addEventListener('click', () => this.setStructureType('truss'));
+    }
+    if (this.btnTrussModeHelp) {
+      this.btnTrussModeHelp.addEventListener('click', () => this.openTrussHelpModal());
+    }
+    if (this.btnCloseTrussHelpModal) {
+      this.btnCloseTrussHelpModal.addEventListener('click', () => this.closeTrussHelpModal());
+    }
+    if (this.btnCloseTrussHelpModalFooter) {
+      this.btnCloseTrussHelpModalFooter.addEventListener('click', () => this.closeTrussHelpModal());
+    }
+    if (this.modalTrussHelp) {
+      this.modalTrussHelp.addEventListener('click', (e) => {
+        if (e.target === this.modalTrussHelp) this.closeTrussHelpModal();
+      });
+    }
+
     // Keyboard shortcuts
     window.addEventListener('keydown', (e) => {
       const isCtrlOrCmd = e.ctrlKey || e.metaKey;
@@ -314,14 +346,17 @@ export class FrameCalculatorApp {
       } else if (e.key === 'Escape' || e.key === 'Esc') {
         if (this.isDrawNodeMode) {
           this.setDrawNodeMode(false);
-        }
-        if (this.isDrawElementMode) {
+        } else if (this.isDrawElementMode) {
           if (this.renderer && this.renderer.drawElemStartNodeId) {
             this.renderer.drawElemStartNodeId = null;
             this.renderer.draw();
           } else {
             this.setDrawElementMode(false);
           }
+        } else if (this.modalContact && this.modalContact.classList.contains('open')) {
+          this.closeContactModal();
+        } else if (this.modalTrussHelp && this.modalTrussHelp.classList.contains('open')) {
+          this.closeTrussHelpModal();
         }
         this.closeAddElementModal();
         this.closeCalcDetailsModal();
@@ -541,9 +576,42 @@ export class FrameCalculatorApp {
     const btnCloseContactModalFooter = document.getElementById('btnCloseContactModalFooter');
     if (btnCloseContactModalFooter) btnCloseContactModalFooter.textContent = t.closeBtn || 'Close';
 
+    // Mode Switcher and Truss Help Modal Localization
+    if (this.lblModeFrameText) this.lblModeFrameText.textContent = t.modeFrameBtn || '🏢 Frame';
+    if (this.btnModeFrame) this.btnModeFrame.title = t.modeFrameTooltip || '2D Frame Analysis (Axial N, Shear T, Bending M)';
+    if (this.lblModeTrussText) this.lblModeTrussText.textContent = t.modeTrussBtn || '🌉 Truss';
+    if (this.btnModeTruss) this.btnModeTruss.title = t.modeTrussTooltip || '2D Pin-Jointed Truss Analysis (Axial Force N only)';
+    if (this.btnTrussModeHelp) this.btnTrussModeHelp.title = t.trussModeHelpTitle || 'What is Truss Mode? (Educational Guide)';
+
+    const lblTrussHelpModalTitle = document.getElementById('lblTrussHelpModalTitle');
+    if (lblTrussHelpModalTitle) lblTrussHelpModalTitle.textContent = t.trussHelpModalTitle || 'Truss Mode vs. Frame Mode Guide';
+    const lblTrussHelpCardTitle = document.getElementById('lblTrussHelpCardTitle');
+    if (lblTrussHelpCardTitle) lblTrussHelpCardTitle.textContent = t.trussHelpCardTitle || 'What happens in Truss Mode?';
+    const lblTrussHelpCardDesc = document.getElementById('lblTrussHelpCardDesc');
+    if (lblTrussHelpCardDesc) lblTrussHelpCardDesc.innerHTML = t.trussHelpCardDesc || 'In Truss Mode, the structure is treated as an idealized <strong>pin-jointed planar truss (kratownica płaska)</strong>.';
+    const lblTrussPrinciple1Title = document.getElementById('lblTrussPrinciple1Title');
+    if (lblTrussPrinciple1Title) lblTrussPrinciple1Title.textContent = t.trussPrinciple1Title || 'Frictionless Pinned Joints';
+    const lblTrussPrinciple1Desc = document.getElementById('lblTrussPrinciple1Desc');
+    if (lblTrussPrinciple1Desc) lblTrussPrinciple1Desc.textContent = t.trussPrinciple1Desc || 'Every node connection is an idealized frictionless hinge. No bending moments can be transmitted across joints.';
+    const lblTrussPrinciple2Title = document.getElementById('lblTrussPrinciple2Title');
+    if (lblTrussPrinciple2Title) lblTrussPrinciple2Title.textContent = t.trussPrinciple2Title || 'Pure Axial Forces Only (N)';
+    const lblTrussPrinciple2Desc = document.getElementById('lblTrussPrinciple2Desc');
+    if (lblTrussPrinciple2Desc) lblTrussPrinciple2Desc.innerHTML = t.trussPrinciple2Desc || 'All elements are pure two-force members carrying <strong>only axial force N</strong>. Shear force <em>T ≡ 0</em> and bending moment <em>M ≡ 0</em> along all bars.';
+    const lblTrussPrinciple3Title = document.getElementById('lblTrussPrinciple3Title');
+    if (lblTrussPrinciple3Title) lblTrussPrinciple3Title.textContent = t.trussPrinciple3Title || 'Color Coding & Zero-Force Members';
+    const lblTrussPrinciple3Desc = document.getElementById('lblTrussPrinciple3Desc');
+    if (lblTrussPrinciple3Desc) lblTrussPrinciple3Desc.innerHTML = t.trussPrinciple3Desc || '<span style="color: #2563eb; font-weight: 700;">🔵 Blue: Tension (+N)</span> • <span style="color: #dc2626; font-weight: 700;">🔴 Red: Compression (-N)</span> • <span style="color: #64748b; font-weight: 700;">⚫ Grey [0]: Zero-Force Bars</span>.';
+    const lblTrussPrinciple4Title = document.getElementById('lblTrussPrinciple4Title');
+    if (lblTrussPrinciple4Title) lblTrussPrinciple4Title.textContent = t.trussPrinciple4Title || 'Static Determinacy Formula';
+    const lblTrussPrinciple4Desc = document.getElementById('lblTrussPrinciple4Desc');
+    if (lblTrussPrinciple4Desc) lblTrussPrinciple4Desc.innerHTML = t.trussPrinciple4Desc || 'Standard planar truss determinacy: <strong>n = (p + r) - 2k</strong>, where <em>p</em> = number of bars, <em>r</em> = support reactions, and <em>k</em> = number of joints.';
+    const btnCloseTrussHelpModalFooter = document.getElementById('btnCloseTrussHelpModalFooter');
+    if (btnCloseTrussHelpModalFooter) btnCloseTrussHelpModalFooter.textContent = t.closeBtn || 'Got it!';
+
     this.renderHeroPresets();
     this.renderTables();
     this.updateUndoRedoButtons();
+    this.updateModeSwitcherUI();
   }
 
   toggleSidebar(forceState) {
@@ -726,6 +794,7 @@ export class FrameCalculatorApp {
     }
 
     try {
+      this.updateModeSwitcherUI();
       const solver = new FrameSolver(this.frameData);
       this.solution = solver.solve();
       this.renderer.setData(this.frameData, this.solution, this.frameData.currentView || 'reactions');
@@ -1285,10 +1354,42 @@ export class FrameCalculatorApp {
     }
   }
 
+  setStructureType(type) {
+    if (!this.frameData) return;
+    this.saveHistoryState();
+    this.frameData.structureType = type;
+    this.updateModeSwitcherUI();
+    this.recalculate();
+    const isPl = this.lang === 'pl';
+    this.showToast(type === 'truss'
+      ? (isPl ? '🌉 Przełączono na Tryb Kratownicy (Tylko siły osiowe N)' : '🏢 Przełączono na Tryb Ramy Płaskiej (N, T, M)')
+      : (isPl ? '🏢 Przełączono na Tryb Ramy Płaskiej (N, T, M)' : '🏢 Switched to 2D Frame Mode (N, T, M)')
+    );
+  }
+
+  updateModeSwitcherUI() {
+    const isTruss = (this.frameData && this.frameData.structureType === 'truss');
+    if (this.btnModeFrame) this.btnModeFrame.classList.toggle('active', !isTruss);
+    if (this.btnModeTruss) this.btnModeTruss.classList.toggle('active', isTruss);
+  }
+
+  openTrussHelpModal() {
+    if (this.modalTrussHelp) {
+      this.modalTrussHelp.classList.add('open');
+    }
+  }
+
+  closeTrussHelpModal() {
+    if (this.modalTrussHelp) {
+      this.modalTrussHelp.classList.remove('open');
+    }
+  }
+
   loadPreset(preset) {
     if (this.isDrawNodeMode) this.setDrawNodeMode(false);
     if (this.isDrawElementMode) this.setDrawElementMode(false);
     this.frameData = JSON.parse(JSON.stringify(preset.data));
+    this.updateModeSwitcherUI();
     const targetView = this.frameData.currentView || 'reactions';
     this.renderer.resetZoom();
     this.recalculate(true);
@@ -1424,7 +1525,7 @@ export class FrameCalculatorApp {
   }
 
   initDraggableModals() {
-    const modalIds = ['modalCalcDetails', 'modalTemplates', 'modalAddElement', 'modalContact'];
+    const modalIds = ['modalCalcDetails', 'modalTemplates', 'modalAddElement', 'modalContact', 'modalTrussHelp'];
 
     modalIds.forEach(id => {
       const overlay = document.getElementById(id);

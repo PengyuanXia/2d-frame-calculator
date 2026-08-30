@@ -155,6 +155,129 @@ export const PRESETS = [
       ],
       currentView: 'reactions'
     }
+  },
+  {
+    id: 'warren_truss',
+    name: {
+      en: '5. Warren Truss with Apex Point Load (Truss Mode)',
+      pl: '5. Kratownica Warrena z obciążeniem węzłowym (Tryb kratownicy)'
+    },
+    description: {
+      en: 'Classical triangular web Warren truss (span L = 6m, height h = 2.5m) subjected to downward nodal loads at top and bottom chord joints. Pin-jointed pure axial force analysis.',
+      pl: 'Klasyczna kratownica trójkątna Warrena (rozpiętość L = 6m, wysokość h = 2.5m) z obciążeniem węzłowym. Czyste siły osiowe N w prętach.'
+    },
+    data: {
+      structureType: 'truss',
+      nodes: [
+        { id: 'N1', x: 0.0, z: 0.0, support: 'pin' },
+        { id: 'N2', x: 3.0, z: 0.0, support: 'none' },
+        { id: 'N3', x: 6.0, z: 0.0, support: 'roller' },
+        { id: 'N4', x: 1.5, z: 2.5, support: 'none' },
+        { id: 'N5', x: 4.5, z: 2.5, support: 'none' }
+      ],
+      elements: [
+        { id: 'E1', nodeI: 'N1', nodeJ: 'N2', EA: 10000.0, EJ: 1.0, hingeI: true, hingeJ: true },
+        { id: 'E2', nodeI: 'N2', nodeJ: 'N3', EA: 10000.0, EJ: 1.0, hingeI: true, hingeJ: true },
+        { id: 'E3', nodeI: 'N4', nodeJ: 'N5', EA: 10000.0, EJ: 1.0, hingeI: true, hingeJ: true },
+        { id: 'E4', nodeI: 'N1', nodeJ: 'N4', EA: 10000.0, EJ: 1.0, hingeI: true, hingeJ: true },
+        { id: 'E5', nodeI: 'N4', nodeJ: 'N2', EA: 10000.0, EJ: 1.0, hingeI: true, hingeJ: true },
+        { id: 'E6', nodeI: 'N2', nodeJ: 'N5', EA: 10000.0, EJ: 1.0, hingeI: true, hingeJ: true },
+        { id: 'E7', nodeI: 'N5', nodeJ: 'N3', EA: 10000.0, EJ: 1.0, hingeI: true, hingeJ: true }
+      ],
+      nodalLoads: [
+        { id: 'L1', nodeId: 'N4', Fx: 0.0, Fz: 20.0, M: 0.0 },
+        { id: 'L2', nodeId: 'N2', Fx: 0.0, Fz: 40.0, M: 0.0 },
+        { id: 'L3', nodeId: 'N5', Fx: 0.0, Fz: 20.0, M: 0.0 }
+      ],
+      distLoads: [],
+      currentView: 'normal'
+    }
+  },
+  {
+    id: 'pratt_bridge_truss',
+    name: {
+      en: '6. Pratt Bridge Truss with Deck Loading (Truss Mode)',
+      pl: '6. Kratownica mostowa Pratta z obciążeniem pomostu (Tryb kratownicy)'
+    },
+    description: {
+      en: 'Standard 4-panel Pratt bridge truss (span L = 8m, height h = 2.5m) under joint gravity loads on the bottom roadway chord. Demonstrates tension diagonals and compression verticals.',
+      pl: '4-panelowa kratownica mostowa Pratta (rozpiętość L = 8m, wysokość h = 2.5m) pod obciążeniem dolnego pasa jezdnego.'
+    },
+    data: {
+      structureType: 'truss',
+      nodes: [
+        { id: 'N1', x: 0.0, z: 0.0, support: 'pin' },
+        { id: 'N2', x: 2.0, z: 0.0, support: 'none' },
+        { id: 'N3', x: 4.0, z: 0.0, support: 'none' },
+        { id: 'N4', x: 6.0, z: 0.0, support: 'none' },
+        { id: 'N5', x: 8.0, z: 0.0, support: 'roller' },
+        { id: 'N6', x: 2.0, z: 2.5, support: 'none' },
+        { id: 'N7', x: 4.0, z: 2.5, support: 'none' },
+        { id: 'N8', x: 6.0, z: 2.5, support: 'none' }
+      ],
+      elements: [
+        { id: 'E1', nodeI: 'N1', nodeJ: 'N2', EA: 10000.0, EJ: 1.0, hingeI: true, hingeJ: true },
+        { id: 'E2', nodeI: 'N2', nodeJ: 'N3', EA: 10000.0, EJ: 1.0, hingeI: true, hingeJ: true },
+        { id: 'E3', nodeI: 'N3', nodeJ: 'N4', EA: 10000.0, EJ: 1.0, hingeI: true, hingeJ: true },
+        { id: 'E4', nodeI: 'N4', nodeJ: 'N5', EA: 10000.0, EJ: 1.0, hingeI: true, hingeJ: true },
+        { id: 'E5', nodeI: 'N6', nodeJ: 'N7', EA: 10000.0, EJ: 1.0, hingeI: true, hingeJ: true },
+        { id: 'E6', nodeI: 'N7', nodeJ: 'N8', EA: 10000.0, EJ: 1.0, hingeI: true, hingeJ: true },
+        { id: 'E7', nodeI: 'N2', nodeJ: 'N6', EA: 10000.0, EJ: 1.0, hingeI: true, hingeJ: true },
+        { id: 'E8', nodeI: 'N3', nodeJ: 'N7', EA: 10000.0, EJ: 1.0, hingeI: true, hingeJ: true },
+        { id: 'E9', nodeI: 'N4', nodeJ: 'N8', EA: 10000.0, EJ: 1.0, hingeI: true, hingeJ: true },
+        { id: 'E10', nodeI: 'N1', nodeJ: 'N6', EA: 10000.0, EJ: 1.0, hingeI: true, hingeJ: true },
+        { id: 'E11', nodeI: 'N2', nodeJ: 'N7', EA: 10000.0, EJ: 1.0, hingeI: true, hingeJ: true },
+        { id: 'E12', nodeI: 'N4', nodeJ: 'N7', EA: 10000.0, EJ: 1.0, hingeI: true, hingeJ: true },
+        { id: 'E13', nodeI: 'N5', nodeJ: 'N8', EA: 10000.0, EJ: 1.0, hingeI: true, hingeJ: true }
+      ],
+      nodalLoads: [
+        { id: 'L1', nodeId: 'N2', Fx: 0.0, Fz: 30.0, M: 0.0 },
+        { id: 'L2', nodeId: 'N3', Fx: 0.0, Fz: 50.0, M: 0.0 },
+        { id: 'L3', nodeId: 'N4', Fx: 0.0, Fz: 30.0, M: 0.0 }
+      ],
+      distLoads: [],
+      currentView: 'normal'
+    }
+  },
+  {
+    id: 'howe_roof_truss',
+    name: {
+      en: '7. Pitched Howe Roof Truss with Symmetrical Loading (Truss Mode)',
+      pl: '7. Kratownica dachowa Howe’a z obciążeniem symetrycznym (Tryb kratownicy)'
+    },
+    description: {
+      en: 'Gable pitched roof truss (span L = 6m, ridge height h = 2.4m) under symmetrical gravity snow/dead loads at top chord joints.',
+      pl: 'Dwuspadowa kratownica dachowa (rozpiętość L = 6m, wysokość w kalenicy h = 2.4m) pod symetrycznym obciążeniem grawitacyjnym.'
+    },
+    data: {
+      structureType: 'truss',
+      nodes: [
+        { id: 'N1', x: 0.0, z: 0.0, support: 'pin' },
+        { id: 'N2', x: 3.0, z: 0.0, support: 'none' },
+        { id: 'N3', x: 6.0, z: 0.0, support: 'roller' },
+        { id: 'N4', x: 1.5, z: 1.2, support: 'none' },
+        { id: 'N5', x: 3.0, z: 2.4, support: 'none' },
+        { id: 'N6', x: 4.5, z: 1.2, support: 'none' }
+      ],
+      elements: [
+        { id: 'E1', nodeI: 'N1', nodeJ: 'N2', EA: 10000.0, EJ: 1.0, hingeI: true, hingeJ: true },
+        { id: 'E2', nodeI: 'N2', nodeJ: 'N3', EA: 10000.0, EJ: 1.0, hingeI: true, hingeJ: true },
+        { id: 'E3', nodeI: 'N1', nodeJ: 'N4', EA: 10000.0, EJ: 1.0, hingeI: true, hingeJ: true },
+        { id: 'E4', nodeI: 'N4', nodeJ: 'N5', EA: 10000.0, EJ: 1.0, hingeI: true, hingeJ: true },
+        { id: 'E5', nodeI: 'N5', nodeJ: 'N6', EA: 10000.0, EJ: 1.0, hingeI: true, hingeJ: true },
+        { id: 'E6', nodeI: 'N6', nodeJ: 'N3', EA: 10000.0, EJ: 1.0, hingeI: true, hingeJ: true },
+        { id: 'E7', nodeI: 'N4', nodeJ: 'N2', EA: 10000.0, EJ: 1.0, hingeI: true, hingeJ: true },
+        { id: 'E8', nodeI: 'N5', nodeJ: 'N2', EA: 10000.0, EJ: 1.0, hingeI: true, hingeJ: true },
+        { id: 'E9', nodeI: 'N6', nodeJ: 'N2', EA: 10000.0, EJ: 1.0, hingeI: true, hingeJ: true }
+      ],
+      nodalLoads: [
+        { id: 'L1', nodeId: 'N4', Fx: 0.0, Fz: 15.0, M: 0.0 },
+        { id: 'L2', nodeId: 'N5', Fx: 0.0, Fz: 25.0, M: 0.0 },
+        { id: 'L3', nodeId: 'N6', Fx: 0.0, Fz: 15.0, M: 0.0 }
+      ],
+      distLoads: [],
+      currentView: 'normal'
+    }
   }
 ];
 

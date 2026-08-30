@@ -1036,12 +1036,47 @@ export class FrameRenderer {
     const showLoads = (mode === 'reactions');
     this.drawStructure(1.0, showLoads);
 
+    // If Truss Mode and viewing Shear or Moment, draw educational zero-state banner
+    if (this.frameData && this.frameData.structureType === 'truss' && (mode === 'shear' || mode === 'moment')) {
+      this.drawTrussZeroStateBanner(mode);
+    }
+
     // 3. Draw Diagram Value Badges on the absolute TOP layer so they are NEVER shaded or cut through by any beam/arrow!
     if (diagramTags && diagramTags.length) {
       diagramTags.forEach(tag => {
         this.renderDiagramTag(ctx, tag);
       });
     }
+  }
+
+  drawTrussZeroStateBanner(mode) {
+    const ctx = this.ctx;
+    ctx.save();
+    const isPl = this.lang === 'pl';
+    const text = (mode === 'shear')
+      ? (isPl ? 'ℹ️ W idealnej kratownicy płaskiej siły tnące są tożsamościowo równe zero: T(s) ≡ 0' : 'ℹ️ In an idealized 2D pin-jointed truss, shear forces are identically zero: T(s) ≡ 0')
+      : (isPl ? 'ℹ️ W idealnej kratownicy płaskiej momenty zginające są tożsamościowo równe zero: M(s) ≡ 0' : 'ℹ️ In an idealized 2D pin-jointed truss, bending moments are identically zero: M(s) ≡ 0');
+
+    ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    const metrics = ctx.measureText(text);
+    const boxW = metrics.width + 28;
+    const boxH = 28;
+    const boxX = (this.width - boxW) / 2;
+    const boxY = 60;
+
+    ctx.fillStyle = 'rgba(248, 250, 252, 0.96)';
+    ctx.strokeStyle = '#94a3b8';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.roundRect(boxX, boxY, boxW, boxH, 6);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#334155';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, this.width / 2, boxY + boxH / 2);
+    ctx.restore();
   }
 
   drawStructure(scale = 1.0, showLoads = true) {
@@ -1143,6 +1178,22 @@ export class FrameRenderer {
     // 4. Draw Nodal Point Loads (only when showLoads is true)
     if (showLoads) {
       this.drawNodalLoads(nodeMap, scale);
+    }
+
+    // 4.5. In Truss Mode, draw frictionless pin-joint circles at all node intersections
+    if (this.frameData && this.frameData.structureType === 'truss') {
+      (this.frameData.nodes || []).forEach(node => {
+        const p = this.worldToPixel(node.x, node.z);
+        ctx.save();
+        ctx.fillStyle = '#ffffff';
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = 2.0 * scale;
+        ctx.beginPath();
+        ctx.arc(p.px, p.py, 4.5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+      });
     }
 
     // 5. Draw Node Badges

@@ -56,6 +56,21 @@
         </button>
       </div>
 
+      <!-- Mode Switcher: Frame vs Truss & Help (?) -->
+      <div class="ribbon-mode-switch">
+        <div class="mode-switch-group">
+          <button class="mode-switch-btn active" id="btnModeFrame" data-mode="frame" title="2D Frame Analysis (Axial N, Shear T, Bending M)">
+            <span id="lblModeFrameText">🏢 Frame</span>
+          </button>
+          <button class="mode-switch-btn" id="btnModeTruss" data-mode="truss" title="2D Pin-Jointed Truss Analysis (Axial Force N only)">
+            <span id="lblModeTrussText">🌉 Truss</span>
+          </button>
+        </div>
+        <button class="btn-mode-help" id="btnTrussModeHelp" title="What is Truss Mode? (Educational Guide)">
+          ?
+        </button>
+      </div>
+
       <div class="ribbon-center">
         <div class="radio-pill-group">
           <button class="radio-pill active" data-view="reactions">
@@ -551,10 +566,94 @@
     </div>
   </div>
 
+  <!-- Modal: Truss Mode Educational Guide -->
+  <div class="modal-overlay" id="modalTrussHelp">
+    <div class="modal-content" style="max-width: 560px;">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span class="text-blue-600 text-lg font-bold">🌉</span>
+          <span id="lblTrussHelpModalTitle">Truss Mode vs. Frame Mode Guide</span>
+        </div>
+        <button class="btn-icon-del text-base" id="btnCloseTrussHelpModal">✕</button>
+      </div>
+      <div class="modal-body" style="padding: 20px 22px; font-size: 13px; line-height: 1.6;">
+        
+        <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px;">
+          <div style="font-weight: 800; color: #1e3a8a; font-size: 13.5px; margin-bottom: 3px;" id="lblTrussHelpCardTitle">
+            What happens in Truss Mode?
+          </div>
+          <div style="color: #1e40af; font-size: 12px;" id="lblTrussHelpCardDesc">
+            In Truss Mode, the structure is treated as an idealized <strong>pin-jointed planar truss (kratownica płaska)</strong>.
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <!-- Item 1 -->
+          <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <div style="width: 28px; height: 28px; border-radius: 6px; background: #e0e7ff; color: #3730a3; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; flex-shrink: 0;">
+              1
+            </div>
+            <div>
+              <div style="font-weight: 700; color: #0f172a; font-size: 13px;" id="lblTrussPrinciple1Title">Frictionless Pinned Joints</div>
+              <div style="color: #475569; font-size: 12px; margin-top: 1px;" id="lblTrussPrinciple1Desc">
+                Every node connection is an idealized frictionless hinge. No bending moments can be transmitted across joints.
+              </div>
+            </div>
+          </div>
+
+          <!-- Item 2 -->
+          <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <div style="width: 28px; height: 28px; border-radius: 6px; background: #dbeafe; color: #1d4ed8; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; flex-shrink: 0;">
+              2
+            </div>
+            <div>
+              <div style="font-weight: 700; color: #0f172a; font-size: 13px;" id="lblTrussPrinciple2Title">Pure Axial Forces Only (N)</div>
+              <div style="color: #475569; font-size: 12px; margin-top: 1px;" id="lblTrussPrinciple2Desc">
+                All elements are pure two-force members carrying <strong>only axial force N</strong>. Shear force <em>T ≡ 0</em> and bending moment <em>M ≡ 0</em> along all bars.
+              </div>
+            </div>
+          </div>
+
+          <!-- Item 3 -->
+          <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <div style="width: 28px; height: 28px; border-radius: 6px; background: #f1f5f9; color: #0f172a; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; flex-shrink: 0;">
+              3
+            </div>
+            <div>
+              <div style="font-weight: 700; color: #0f172a; font-size: 13px;" id="lblTrussPrinciple3Title">Color Coding & Zero-Force Members</div>
+              <div style="color: #475569; font-size: 12px; margin-top: 1px;" id="lblTrussPrinciple3Desc">
+                <span style="color: #2563eb; font-weight: 700;">🔵 Blue: Tension (+N)</span> • 
+                <span style="color: #dc2626; font-weight: 700;">🔴 Red: Compression (-N)</span> • 
+                <span style="color: #64748b; font-weight: 700;">⚫ Grey [0]: Zero-Force Bars</span>.
+              </div>
+            </div>
+          </div>
+
+          <!-- Item 4 -->
+          <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <div style="width: 28px; height: 28px; border-radius: 6px; background: #ecfdf5; color: #065f46; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; flex-shrink: 0;">
+              4
+            </div>
+            <div>
+              <div style="font-weight: 700; color: #0f172a; font-size: 13px;" id="lblTrussPrinciple4Title">Static Determinacy Formula</div>
+              <div style="color: #475569; font-size: 12px; margin-top: 1px;" id="lblTrussPrinciple4Desc">
+                Standard planar truss determinacy: <strong>n = (p + r) - 2k</strong>, where <em>p</em> = number of bars, <em>r</em> = support reactions, and <em>k</em> = number of joints.
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button class="btn-primary" id="btnCloseTrussHelpModalFooter">Got it!</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Floating Notification -->
   <div id="toastNotification" class="toast-notification"></div>
 
   <!-- Main Module -->
-  <script type="module" src="js/ui.js?v=2.9"></script>
+  <script type="module" src="js/ui.js?v=3.0"></script>
 </body>
 </html>

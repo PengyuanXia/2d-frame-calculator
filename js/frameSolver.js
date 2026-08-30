@@ -9,6 +9,7 @@ import { DEFAULT_EA, DEFAULT_EJ } from './constants.js';
 
 export class FrameSolver {
   constructor(frameData) {
+    this.structureType = frameData.structureType || 'frame';
     this.nodes = JSON.parse(JSON.stringify(frameData.nodes || []));
     this.elements = JSON.parse(JSON.stringify(frameData.elements || []));
     this.nodalLoads = JSON.parse(JSON.stringify(frameData.nodalLoads || []));
@@ -17,6 +18,13 @@ export class FrameSolver {
   }
 
   solve() {
+    if (this.structureType === 'truss') {
+      return this.solveTruss();
+    }
+    return this.solveFrame();
+  }
+
+  solveFrame() {
     const numNodes = this.nodes.length;
     const numElements = this.elements.length;
 
@@ -455,6 +463,264 @@ export class FrameSolver {
         degree: Math.max(0, degreeOfIndeterminacy),
         type: degreeOfIndeterminacy <= 0 ? 'Determinate' : 'Indeterminate',
         label: degreeOfIndeterminacy <= 0 ? 'Statically Determinate' : `Statically Indeterminate (n = ${degreeOfIndeterminacy})`
+      }
+    };
+  }
+
+  solveTruss() {
+    const numNodes = this.nodes.length;
+    const numElements = this.elements.length;
+
+    if (numNodes < 2 || numElements < 1) {
+      return this.createUnstableResult('Insufficient nodes or elements for truss analysis.');
+    }
+
+    const nodeMap = new Map();
+    this.nodes.forEach((n, idx) => {
+      nodeMap.set(n.id, {
+        ...n,
+        index: idx,
+        x: Number(n.x) || 0,
+        z: Number(n.z) || 0,
+        support: n.support || 'none'
+      });
+    });
+
+    // 2 DOFs per node (ux, wz)
+    const totalDof = numNodes * 2;
+    const K = Array.from({ length: totalDof }, () => new Float64Array(totalDof));
+    const F = new Float64Array(totalDof);
+
+    // Apply Direct Nodal Point Loads (Positive user Fz = Downward)
+    this.nodalLoads.forEach(nl => {
+      const node = nodeMap.get(nl.nodeId);
+      if (node) {
+        const dofU = node.index * 2 + 0;
+        const dofW = node.index * 2 + 1;
+        F[dofU] += Number(nl.Fx) || 0;
+        F[dofW] -= Number(nl.Fz) || 0; // Positive user input Fz is downward
+      }
+    });
+
+    // Element geometric properties
+    const elementProps = [];
+
+    // Assemble 4x4 Truss Element Stiffness Matrices
+    for (const elem of this.elements) {
+      const nodeI = nodeMap.get(elem.nodeI);
+      const nodeJ = nodeMap.get(elem.nodeJ);
+      if (!nodeI || !nodeJ) continue;
+
+      const dx = nodeJ.x - nodeI.x;
+      const dz = nodeJ.z - nodeI.z;
+      const L = Math.hypot(dx, dz);
+      if (L < 1e-6) continue;
+
+      const cos = dx / L;
+      const sin = dz / L;
+      const EA = Math.max(0.1, Number(elem.EA) || this.EA);
+
+      const kAxial = EA / L;
+      const c2 = cos * cos * kAxial;
+      const cs = cos * sin * kAxial;
+      const s2 = sin * sin * kAxial;
+
+      const dofs = [
+        nodeI.index * 2 + 0, // u_i
+        nodeI.index * 2 + 1, // w_i
+        nodeJ.index * 2 + 0, // u_j
+        nodeJ.index * 2 + 1  // w_j
+      ];
+
+      const kLocal4 = [
+        [ c2,  cs, -c2, -cs],
+        [ cs,  s2, -cs, -s2],
+        [-c2, -cs,  c2,  cs],
+        [-cs, -s2,  cs,  s2]
+      ];
+
+      for (let r = 0; r < 4; r++) {
+        for (let c = 0; c < 4; c++) {
+          K[dofs[r]][dofs[c]] += kLocal4[r][c];
+        }
+      }
+
+      elementProps.push({
+        id: elem.id,
+        nodeI: elem.nodeI,
+        nodeJ: elem.nodeJ,
+        L,
+        cos,
+        sin,
+        EA,
+        dofs
+      });
+    }
+
+    // Support Boundary Conditions
+    const fixedDofs = new Set();
+    let supportReactionCount = 0;
+
+    this.nodes.forEach((n, idx) => {
+      const sup = n.support || 'none';
+      const dofU = idx * 2 + 0;
+      const dofW = idx * 2 + 1;
+
+      if (sup === 'fixed' || sup === 'pin') {
+        fixedDofs.add(dofU);
+        fixedDofs.add(dofW);
+        supportReactionCount += 2;
+      } else if (sup === 'roller') { // horizontal roller (restrains z / vertical displacement)
+        fixedDofs.add(dofW);
+        supportReactionCount += 1;
+      } else if (sup === 'roller_x') { // vertical roller (restrains x / horizontal displacement)
+        fixedDofs.add(dofU);
+        supportReactionCount += 1;
+      }
+    });
+
+    // Degree of static determinacy for 2D Truss: n = (p + r) - 2k
+    const degreeOfIndeterminacy = (numElements + supportReactionCount) - (2 * numNodes);
+
+    const freeDofs = [];
+    for (let i = 0; i < totalDof; i++) {
+      if (!fixedDofs.has(i)) {
+        freeDofs.push(i);
+      }
+    }
+
+    const nFree = freeDofs.length;
+    const Kff = Array.from({ length: nFree }, () => new Float64Array(nFree));
+    const Ff = new Float64Array(nFree);
+
+    for (let i = 0; i < nFree; i++) {
+      const dofI = freeDofs[i];
+      Ff[i] = F[dofI];
+      for (let j = 0; j < nFree; j++) {
+        const dofJ = freeDofs[j];
+        Kff[i][j] = K[dofI][dofJ];
+      }
+    }
+
+    const { x: dFree, isSingular } = this.solveLinearSystem(Kff, Ff);
+
+    if (isSingular || degreeOfIndeterminacy < 0) {
+      return this.createUnstableResult(
+        degreeOfIndeterminacy < 0 
+          ? `Structure is a geometrically unstable truss mechanism (n = ${degreeOfIndeterminacy} < 0).` 
+          : 'Singular truss stiffness matrix (insufficient or unstable bracing).'
+      );
+    }
+
+    // Full displacement vector (2 DOFs per node)
+    const displacements = new Float64Array(totalDof);
+    for (let i = 0; i < nFree; i++) {
+      displacements[freeDofs[i]] = dFree[i];
+    }
+
+    // Global Reactions: R = K * d - F
+    const reactions = {};
+    for (const [nodeId, node] of nodeMap.entries()) {
+      const idx = node.index;
+      const dofU = idx * 2 + 0;
+      const dofW = idx * 2 + 1;
+
+      let rU = 0, rW = 0;
+      for (let j = 0; j < totalDof; j++) {
+        rU += K[dofU][j] * displacements[j];
+        rW += K[dofW][j] * displacements[j];
+      }
+      rU -= F[dofU];
+      rW -= F[dofW];
+
+      const isUFixed = fixedDofs.has(dofU);
+      const isWFixed = fixedDofs.has(dofW);
+
+      if (isUFixed || isWFixed) {
+        reactions[nodeId] = {
+          Rx: isUFixed ? rU : 0,
+          Rz: isWFixed ? rW : 0, // Positive user reaction upwards
+          MR: 0 // No reaction moment in pin-jointed truss
+        };
+      }
+    }
+
+    // Member Axial Forces & Results
+    const elementResults = [];
+
+    for (const prop of elementProps) {
+      const uI = displacements[prop.dofs[0]];
+      const wI = displacements[prop.dofs[1]];
+      const uJ = displacements[prop.dofs[2]];
+      const wJ = displacements[prop.dofs[3]];
+
+      // Axial elongation: Delta L = (uJ - uI) * cos + (wJ - wI) * sin
+      const deltaL = (uJ - uI) * prop.cos + (wJ - wI) * prop.sin;
+      const N = (prop.EA / prop.L) * deltaL;
+      const isZeroForce = Math.abs(N) < 1e-4;
+      const nodeObjI = nodeMap.get(prop.nodeI);
+      const nodeObjJ = nodeMap.get(prop.nodeJ);
+
+      // In Truss mode: T = 0, M = 0 everywhere
+      const samples = [];
+      const numSamples = 21;
+      for (let s = 0; s <= numSamples; s++) {
+        const t = s / numSamples;
+        const sDist = t * prop.L;
+        const xPt = nodeObjI.x + sDist * prop.cos;
+        const zPt = nodeObjI.z + sDist * prop.sin;
+        samples.push({
+          s: sDist,
+          x: xPt,
+          z: zPt,
+          N: isZeroForce ? 0 : N,
+          T: 0,
+          M: 0
+        });
+      }
+
+      elementResults.push({
+        id: prop.id,
+        nodeI: prop.nodeI,
+        nodeJ: prop.nodeJ,
+        coordI: { x: nodeObjI.x, z: nodeObjI.z },
+        coordJ: { x: nodeObjJ.x, z: nodeObjJ.z },
+        L: prop.L,
+        cos: prop.cos,
+        sin: prop.sin,
+        insideSign: 1,
+        axialForce: isZeroForce ? 0 : N,
+        isZeroForce,
+        state: isZeroForce ? 'zero' : (N > 0 ? 'tension' : 'compression'),
+        endForces: {
+          i: { N: isZeroForce ? 0 : -N, T: 0, M: 0 },
+          j: { N: isZeroForce ? 0 : N, T: 0, M: 0 }
+        },
+        extrema: {
+          N: { min: isZeroForce ? 0 : N, max: isZeroForce ? 0 : N },
+          T: { min: 0, max: 0 },
+          M: { min: 0, max: 0 }
+        },
+        samples
+      });
+    }
+
+    const equilibrium = this.checkGlobalEquilibrium(reactions, nodeMap);
+
+    return {
+      isStable: true,
+      structureType: 'truss',
+      nodes: Array.from(nodeMap.values()),
+      elements: elementResults,
+      reactions,
+      equilibrium,
+      displacements: Array.from(displacements),
+      determinacy: {
+        isStable: true,
+        degree: Math.max(0, degreeOfIndeterminacy),
+        type: degreeOfIndeterminacy <= 0 ? 'Determinate' : 'Indeterminate',
+        label: degreeOfIndeterminacy <= 0 ? 'Statically Determinate' : `Statically Indeterminate (n = ${degreeOfIndeterminacy})`,
+        formula: `n = (p + r) - 2k = (${numElements} + ${supportReactionCount}) - 2·${numNodes} = ${degreeOfIndeterminacy}`
       }
     };
   }
