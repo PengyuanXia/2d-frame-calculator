@@ -326,12 +326,19 @@
             </svg>
             <span id="btnClearCanvasText">Clear Canvas</span>
           </button>
-          <button id="btnDrawElementMode" class="btn-draw-node" title="Click existing nodes to create members (continuous chaining)">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 15px; height: 15px;">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4l16 16"></path>
-            </svg>
-            <span id="btnDrawElementText">Create Member</span>
-          </button>
+          <div class="draw-element-control-group">
+            <button id="btnDrawElementMode" class="btn-draw-node" title="Click existing nodes to create members (continuous chaining)">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 15px; height: 15px;">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4l16 16"></path>
+              </svg>
+              <span id="btnDrawElementText">Create Member</span>
+            </button>
+            <label class="toggle-pill-sub" id="lblAutoSplitToggle" title="Auto-create nodes and split members when clicking along existing bars">
+              <input type="checkbox" id="chkAutoSplitNodes" checked>
+              <span class="toggle-sub-slider"></span>
+              <span class="toggle-sub-text" id="lblAutoSplitText">Auto-create nodes</span>
+            </label>
+          </div>
           <button id="btnDrawNodeMode" class="btn-draw-node" title="Click to interactively place nodes on canvas with 0.5m grid snap">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 15px; height: 15px;">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>

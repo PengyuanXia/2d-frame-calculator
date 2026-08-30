@@ -131,6 +131,12 @@ export class FrameCalculatorApp {
     this.btnCloseTrussHelpModal = document.getElementById('btnCloseTrussHelpModal');
     this.btnCloseTrussHelpModalFooter = document.getElementById('btnCloseTrussHelpModalFooter');
 
+    // Auto-create nodes toggle pill
+    this.chkAutoSplitNodes = document.getElementById('chkAutoSplitNodes');
+    this.lblAutoSplitToggle = document.getElementById('lblAutoSplitToggle');
+    this.lblAutoSplitText = document.getElementById('lblAutoSplitText');
+    this.isAutoSplitNodesEnabled = true;
+
     // Make all modals draggable by header
     this.initDraggableModals();
   }
@@ -275,6 +281,17 @@ export class FrameCalculatorApp {
     const btnDrawElement = document.getElementById('btnDrawElementMode');
     if (btnDrawElement) {
       btnDrawElement.addEventListener('click', () => this.toggleDrawElementMode());
+    }
+
+    // Auto-create nodes toggle checkbox
+    if (this.chkAutoSplitNodes) {
+      this.chkAutoSplitNodes.addEventListener('change', () => {
+        this.isAutoSplitNodesEnabled = this.chkAutoSplitNodes.checked;
+        if (this.renderer) {
+          this.renderer.setAutoSplitEnabled(this.isAutoSplitNodesEnabled);
+        }
+        this.showToast(this.isAutoSplitNodesEnabled ? (this.t.toastAutoSplitOn || '⚡ Auto-create nodes on member: ON') : (this.t.toastAutoSplitOff || '⚡ Auto-create nodes on member: OFF'));
+      });
     }
 
     // Clear Canvas Button (Directs to empty frame preset)
@@ -547,6 +564,13 @@ export class FrameCalculatorApp {
       btnClearCanvas.title = t.clearCanvasTooltip || 'Clear canvas and direct to empty frame preset';
     }
 
+    if (this.lblAutoSplitText) {
+      this.lblAutoSplitText.textContent = t.autoSplitNodesLabel || 'Auto-create nodes';
+    }
+    if (this.lblAutoSplitToggle) {
+      this.lblAutoSplitToggle.title = t.autoSplitNodesTooltip || 'Auto-create nodes and split members when clicking along existing bars';
+    }
+
     if (this.lblSidebarHeaderTitle) this.lblSidebarHeaderTitle.textContent = t.sidebarHeaderTitle || 'Model Inputs';
     if (this.btnToggleSidebarText) this.btnToggleSidebarText.textContent = t.toggleSidebarBtn || 'Panel';
     if (this.btnToggleSidebar) this.btnToggleSidebar.title = t.toggleSidebarTooltip || 'Toggle left inputs panel (hide/show tables)';
@@ -705,6 +729,7 @@ export class FrameCalculatorApp {
     }, (memberElementId, x, z) => {
       return this.handleMemberSplitAndConnect(memberElementId, x, z);
     });
+    this.renderer.setAutoSplitEnabled(this.isAutoSplitNodesEnabled);
   }
 
   handleInteractiveNodePlaced(x, z) {

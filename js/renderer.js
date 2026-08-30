@@ -41,12 +41,21 @@ export class FrameRenderer {
     this.dragStartY = 0;
     this.initialPanX = 0;
     this.initialPanY = 0;
+    this.isAutoSplitNodesEnabled = true;
 
     this.setupListeners();
   }
 
   setLanguage(lang) {
     this.lang = lang;
+    this.draw();
+  }
+
+  setAutoSplitEnabled(enabled) {
+    this.isAutoSplitNodesEnabled = !!enabled;
+    if (!this.isAutoSplitNodesEnabled) {
+      this.drawElemHoverSnap = null;
+    }
     this.draw();
   }
 
@@ -124,6 +133,7 @@ export class FrameRenderer {
    * Returns { elementId, x, z, snapType, alignedNodeId } or null.
    */
   findSnapPointOnMember(pixelX, pixelY) {
+    if (!this.isAutoSplitNodesEnabled) return null;
     if (!this.frameData || !this.frameData.elements || !this.frameData.nodes) return null;
 
     const worldPos = this.pixelToWorld(pixelX, pixelY);
