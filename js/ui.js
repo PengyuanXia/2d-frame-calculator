@@ -137,6 +137,11 @@ export class FrameCalculatorApp {
     this.lblAutoSplitText = document.getElementById('lblAutoSplitText');
     this.isAutoSplitNodesEnabled = true;
 
+    // Show/Hide structure labels toggle
+    this.chkShowLabels = document.getElementById('chkShowLabels');
+    this.lblShowLabelsText = document.getElementById('lblShowLabelsText');
+    this.lblToggleLabels = document.getElementById('lblToggleLabels');
+
     // Make all modals draggable by header
     this.initDraggableModals();
   }
@@ -291,6 +296,17 @@ export class FrameCalculatorApp {
           this.renderer.setAutoSplitEnabled(this.isAutoSplitNodesEnabled);
         }
         this.showToast(this.isAutoSplitNodesEnabled ? (this.t.toastAutoSplitOn || '⚡ Auto-create nodes on member: ON') : (this.t.toastAutoSplitOff || '⚡ Auto-create nodes on member: OFF'));
+      });
+    }
+
+    // Show/Hide Labels toggle checkbox
+    if (this.chkShowLabels) {
+      this.chkShowLabels.addEventListener('change', () => {
+        const show = this.chkShowLabels.checked;
+        if (this.renderer) {
+          this.renderer.setShowLabels(show);
+        }
+        this.showToast(show ? (this.t.toastLabelsOn || '🏷️ Structure labels: SHOWN') : (this.t.toastLabelsOff || '🏷️ Structure labels: HIDDEN'));
       });
     }
 
@@ -569,6 +585,13 @@ export class FrameCalculatorApp {
     }
     if (this.lblAutoSplitToggle) {
       this.lblAutoSplitToggle.title = t.autoSplitNodesTooltip || 'Auto-create nodes and split members when clicking along existing bars';
+    }
+
+    if (this.lblShowLabelsText) {
+      this.lblShowLabelsText.textContent = t.showLabelsBtn || '🏷️ Labels';
+    }
+    if (this.lblToggleLabels) {
+      this.lblToggleLabels.title = t.showLabelsTooltip || 'Toggle structure text info (Member IDs, Lengths, Node IDs)';
     }
 
     if (this.lblSidebarHeaderTitle) this.lblSidebarHeaderTitle.textContent = t.sidebarHeaderTitle || 'Model Inputs';

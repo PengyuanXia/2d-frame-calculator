@@ -42,6 +42,7 @@ export class FrameRenderer {
     this.initialPanX = 0;
     this.initialPanY = 0;
     this.isAutoSplitNodesEnabled = true;
+    this.showLabels = true;
 
     this.setupListeners();
   }
@@ -56,6 +57,11 @@ export class FrameRenderer {
     if (!this.isAutoSplitNodesEnabled) {
       this.drawElemHoverSnap = null;
     }
+    this.draw();
+  }
+
+  setShowLabels(show) {
+    this.showLabels = !!show;
     this.draw();
   }
 
@@ -1401,35 +1407,37 @@ export class FrameRenderer {
       ctx.lineTo(endPx, endPy);
       ctx.stroke();
 
-      // Member ID & Length Tag at Midpoint
-      const midX = (p1.px + p2.px) / 2;
-      const midY = (p1.py + p2.py) / 2;
-      const L_world = Math.hypot(nJ.x - nI.x, nJ.z - nI.z);
+      // Member ID & Length Tag at Midpoint (only when showLabels is true)
+      if (this.showLabels) {
+        const midX = (p1.px + p2.px) / 2;
+        const midY = (p1.py + p2.py) / 2;
+        const L_world = Math.hypot(nJ.x - nI.x, nJ.z - nI.z);
 
-      const perpDist = 20 * scale;
-      const tagX = midX + nx * perpDist;
-      const tagY = midY + ny * perpDist;
+        const perpDist = 20 * scale;
+        const tagX = midX + nx * perpDist;
+        const tagY = midY + ny * perpDist;
 
-      const tagText = `${elem.id} (${formatNum(L_world)}m)`;
-      ctx.save();
-      ctx.font = `bold ${11.5 * scale}px 'JetBrains Mono', monospace`;
-      const metrics = ctx.measureText(tagText);
-      const padX = 6 * scale;
-      const boxW = metrics.width + padX * 2;
-      const boxH = 17 * scale;
+        const tagText = `${elem.id} (${formatNum(L_world)}m)`;
+        ctx.save();
+        ctx.font = `bold ${11.5 * scale}px 'JetBrains Mono', monospace`;
+        const metrics = ctx.measureText(tagText);
+        const padX = 6 * scale;
+        const boxW = metrics.width + padX * 2;
+        const boxH = 17 * scale;
 
-      // Crisp opaque white pill badge
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(tagX - boxW / 2, tagY - boxH / 2, boxW, boxH);
-      ctx.strokeStyle = '#cbd5e1';
-      ctx.lineWidth = 1;
-      ctx.strokeRect(tagX - boxW / 2, tagY - boxH / 2, boxW, boxH);
+        // Crisp opaque white pill badge
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(tagX - boxW / 2, tagY - boxH / 2, boxW, boxH);
+        ctx.strokeStyle = '#cbd5e1';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(tagX - boxW / 2, tagY - boxH / 2, boxW, boxH);
 
-      ctx.fillStyle = '#334155';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(tagText, tagX, tagY);
-      ctx.restore();
+        ctx.fillStyle = '#334155';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(tagText, tagX, tagY);
+        ctx.restore();
+      }
 
       // Draw Parenthesis Hinge Symbol '(' or ')' at the cut end
       if (elem.hingeI) {
@@ -1518,11 +1526,13 @@ export class FrameRenderer {
     ctx.arc(px, py, 4.0 * scale, 0, Math.PI * 2);
     ctx.fill();
 
-    // Node ID Text label (e.g. N1, N4 in blue)
-    ctx.fillStyle = '#2563eb';
-    ctx.font = `bold ${12 * scale}px 'JetBrains Mono', monospace`;
-    ctx.textAlign = 'left';
-    ctx.fillText(nodeId, px + 7 * scale, py - 6 * scale);
+    // Node ID Text label (e.g. N1, N4 in blue) - only when showLabels is true
+    if (this.showLabels) {
+      ctx.fillStyle = '#2563eb';
+      ctx.font = `bold ${12 * scale}px 'JetBrains Mono', monospace`;
+      ctx.textAlign = 'left';
+      ctx.fillText(nodeId, px + 7 * scale, py - 6 * scale);
+    }
     ctx.restore();
   }
 
