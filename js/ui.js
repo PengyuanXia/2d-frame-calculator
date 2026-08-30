@@ -4,12 +4,12 @@
  * Undo / Redo history, modal dialogs, URL share link, JSON save/load, EN/PL i18n.
  */
 
-import { DEFAULT_FRAME, SUPPORT_TYPES } from './constants.js?v=2.7';
-import { FrameSolver } from './frameSolver.js?v=2.7';
-import { FrameRenderer } from './renderer.js?v=2.7';
-import { generateStepByStepReport } from './stepByStep.js?v=2.7';
-import { PRESETS, EMPTY_FRAME_PRESET } from './presets.js?v=2.7';
-import { TRANSLATIONS, getSavedLanguage, setSavedLanguage } from './i18n.js?v=2.7';
+import { DEFAULT_FRAME, SUPPORT_TYPES } from './constants.js?v=2.8';
+import { FrameSolver } from './frameSolver.js?v=2.8';
+import { FrameRenderer } from './renderer.js?v=2.8';
+import { generateStepByStepReport } from './stepByStep.js?v=2.8';
+import { PRESETS, EMPTY_FRAME_PRESET } from './presets.js?v=2.8';
+import { TRANSLATIONS, getSavedLanguage, setSavedLanguage } from './i18n.js?v=2.8';
 
 function formatNum(val, maxDec = 2) {
   if (val === null || val === undefined || isNaN(val)) return '-';
@@ -112,6 +112,14 @@ export class FrameCalculatorApp {
     this.btnFloatingOpenSidebar = document.getElementById('btnFloatingOpenSidebar');
     this.btnFloatingOpenSidebarText = document.getElementById('btnFloatingOpenSidebarText');
     this.lblSidebarHeaderTitle = document.getElementById('lblSidebarHeaderTitle');
+
+    // Contact & Feedback Modal
+    this.modalContact = document.getElementById('modalContact');
+    this.btnContact = document.getElementById('btnContact');
+    this.btnCloseContactModal = document.getElementById('btnCloseContactModal');
+    this.btnCloseContactModalFooter = document.getElementById('btnCloseContactModalFooter');
+    this.btnCopyEmail = document.getElementById('btnCopyEmail');
+    this.btnCopyEmailText = document.getElementById('btnCopyEmailText');
 
     // Make all modals draggable by header
     this.initDraggableModals();
@@ -275,6 +283,25 @@ export class FrameCalculatorApp {
       this.btnFloatingOpenSidebar.addEventListener('click', () => this.toggleSidebar(false));
     }
 
+    // Contact & Feedback Modal Listeners
+    if (this.btnContact) {
+      this.btnContact.addEventListener('click', () => this.openContactModal());
+    }
+    if (this.btnCloseContactModal) {
+      this.btnCloseContactModal.addEventListener('click', () => this.closeContactModal());
+    }
+    if (this.btnCloseContactModalFooter) {
+      this.btnCloseContactModalFooter.addEventListener('click', () => this.closeContactModal());
+    }
+    if (this.btnCopyEmail) {
+      this.btnCopyEmail.addEventListener('click', () => this.copyEmailToClipboard());
+    }
+    if (this.modalContact) {
+      this.modalContact.addEventListener('click', (e) => {
+        if (e.target === this.modalContact) this.closeContactModal();
+      });
+    }
+
     // Keyboard shortcuts
     window.addEventListener('keydown', (e) => {
       const isCtrlOrCmd = e.ctrlKey || e.metaKey;
@@ -299,6 +326,7 @@ export class FrameCalculatorApp {
         this.closeAddElementModal();
         this.closeCalcDetailsModal();
         this.closeTemplatesModal();
+        this.closeContactModal();
         this.hideHeroOverlay();
       } else if (e.key === 'Enter') {
         if (this.modalAddElement && this.modalAddElement.classList.contains('open')) {
@@ -492,7 +520,26 @@ export class FrameCalculatorApp {
     const lblContactText = document.getElementById('lblContactText');
     if (lblContactText) lblContactText.textContent = t.contactBtn || 'Contact';
     const btnContact = document.getElementById('btnContact');
-    if (btnContact) btnContact.title = t.contactTooltip || 'Contact Creator (pengyuan.xia.dokt@pw.edu.pl)';
+    if (btnContact) btnContact.title = t.contactTooltip || 'Contact Creator & Feedback';
+
+    const lblContactModalTitle = document.getElementById('lblContactModalTitle');
+    if (lblContactModalTitle) lblContactModalTitle.textContent = t.contactModalTitle || 'Contact & Feedback';
+    const lblContactAuthorSub = document.getElementById('lblContactAuthorSub');
+    if (lblContactAuthorSub) lblContactAuthorSub.textContent = t.contactAuthorSub || 'Doctoral Researcher • Warsaw University of Technology (PW)';
+    const lblContactEmailTitle = document.getElementById('lblContactEmailTitle');
+    if (lblContactEmailTitle) lblContactEmailTitle.textContent = t.contactEmailTitle || 'University Email';
+    const lblContactGithubTitle = document.getElementById('lblContactGithubTitle');
+    if (lblContactGithubTitle) lblContactGithubTitle.textContent = t.contactGithubTitle || 'GitHub Repository';
+    const lblContactGithubSub = document.getElementById('lblContactGithubSub');
+    if (lblContactGithubSub) lblContactGithubSub.textContent = t.contactGithubSub || 'Bug reports & feature requests';
+    const lblContactKofiTitle = document.getElementById('lblContactKofiTitle');
+    if (lblContactKofiTitle) lblContactKofiTitle.textContent = t.contactKofiTitle || 'Buy Me a Coffee';
+    const lblContactKofiSub = document.getElementById('lblContactKofiSub');
+    if (lblContactKofiSub) lblContactKofiSub.textContent = t.contactKofiSub || 'Support project development';
+    const btnCopyEmailText = document.getElementById('btnCopyEmailText');
+    if (btnCopyEmailText) btnCopyEmailText.textContent = t.copyBtn || '📋 Copy';
+    const btnCloseContactModalFooter = document.getElementById('btnCloseContactModalFooter');
+    if (btnCloseContactModalFooter) btnCloseContactModalFooter.textContent = t.closeBtn || 'Close';
 
     this.renderHeroPresets();
     this.renderTables();
@@ -1207,6 +1254,37 @@ export class FrameCalculatorApp {
     this.modalTemplates.classList.remove('open');
   }
 
+  openContactModal() {
+    if (this.modalContact) {
+      this.modalContact.classList.add('open');
+    }
+  }
+
+  closeContactModal() {
+    if (this.modalContact) {
+      this.modalContact.classList.remove('open');
+    }
+  }
+
+  copyEmailToClipboard() {
+    const email = 'pengyuan.xia.dokt@pw.edu.pl';
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(email).then(() => {
+        this.showToast(this.t.toastEmailCopied || '📋 Email copied to clipboard!');
+        if (this.btnCopyEmailText) {
+          this.btnCopyEmailText.textContent = this.t.copiedBtn || '✓ Copied!';
+          setTimeout(() => {
+            if (this.btnCopyEmailText) this.btnCopyEmailText.textContent = this.t.copyBtn || '📋 Copy';
+          }, 2200);
+        }
+      }).catch(() => {
+        this.showToast('pengyuan.xia.dokt@pw.edu.pl');
+      });
+    } else {
+      this.showToast('pengyuan.xia.dokt@pw.edu.pl');
+    }
+  }
+
   loadPreset(preset) {
     if (this.isDrawNodeMode) this.setDrawNodeMode(false);
     if (this.isDrawElementMode) this.setDrawElementMode(false);
@@ -1346,7 +1424,7 @@ export class FrameCalculatorApp {
   }
 
   initDraggableModals() {
-    const modalIds = ['modalCalcDetails', 'modalTemplates', 'modalAddElement'];
+    const modalIds = ['modalCalcDetails', 'modalTemplates', 'modalAddElement', 'modalContact'];
 
     modalIds.forEach(id => {
       const overlay = document.getElementById(id);
