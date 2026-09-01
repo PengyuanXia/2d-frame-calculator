@@ -1682,27 +1682,29 @@ export class FrameRenderer {
 
       ctx.save();
 
-      // Elongated arrow length so arrow tail & label extend well beyond diagram curves
-      const arrowLen = 72 * scale;
+      // Elongated arrow length and enlarged arrowhead
+      const arrowLen = 65 * scale;
+      const headSize = 11.5 * scale;
+      const arrowLineWidth = 3.0 * scale;
 
-      // Horizontal Force Fx (-> if > 0)
+      // Horizontal Force Fx (tail at node, points outward: right if fx > 0, left if fx < 0)
       if (Math.abs(fx) > 1e-4) {
         const isRight = fx > 0;
-        const fromX = isRight ? p.px - arrowLen : p.px + arrowLen;
-        const toX = p.px;
-        this.drawArrow(ctx, fromX, p.py, toX, p.py, '#dc2626', 8 * scale, 3 * scale);
+        const fromX = p.px;
+        const toX = isRight ? p.px + arrowLen : p.px - arrowLen;
+        this.drawArrow(ctx, fromX, p.py, toX, p.py, '#dc2626', headSize, arrowLineWidth);
 
-        this.drawBadgeText(ctx, isRight ? fromX - 6 : fromX + 6, p.py, `Fx=${formatNum(Math.abs(fx))}kN`, '#dc2626', isRight ? 'right' : 'left', '#fca5a5');
+        this.drawBadgeText(ctx, isRight ? toX + 6 : toX - 6, p.py, `Fx=${formatNum(Math.abs(fx))}kN`, '#dc2626', isRight ? 'left' : 'right', '#fca5a5');
       }
 
-      // Vertical Force Fz (>0 downwards, <0 upwards)
+      // Vertical Force Fz (tail at node, points outward: down if fz > 0, up if fz < 0)
       if (Math.abs(fz) > 1e-4) {
         const isDownward = fz > 0;
-        const fromY = isDownward ? p.py - arrowLen : p.py + arrowLen;
-        const toY = p.py;
-        this.drawArrow(ctx, p.px, fromY, p.px, toY, '#dc2626', 8 * scale, 3 * scale);
+        const fromY = p.py;
+        const toY = isDownward ? p.py + arrowLen : p.py - arrowLen;
+        this.drawArrow(ctx, p.px, fromY, p.px, toY, '#dc2626', headSize, arrowLineWidth);
 
-        this.drawBadgeText(ctx, p.px, isDownward ? fromY - 12 * scale : fromY + 12 * scale, `Fz=${formatNum(Math.abs(fz))}kN`, '#dc2626', 'center', '#fca5a5');
+        this.drawBadgeText(ctx, p.px, isDownward ? toY + 14 * scale : toY - 14 * scale, `Fz=${formatNum(Math.abs(fz))}kN`, '#dc2626', 'center', '#fca5a5');
       }
 
       // Moment M (counter-clockwise arc if > 0, clockwise if < 0)
@@ -2145,7 +2147,7 @@ export class FrameRenderer {
     ctx.restore();
   }
 
-  drawArrow(ctx, fromX, fromY, toX, toY, color, headLen = 8, lineWidth = 2.5) {
+  drawArrow(ctx, fromX, fromY, toX, toY, color, headLen = 10, lineWidth = 2.5) {
     const dx = toX - fromX;
     const dy = toY - fromY;
     const angle = Math.atan2(dy, dx);
@@ -2160,10 +2162,11 @@ export class FrameRenderer {
     ctx.lineTo(toX, toY);
     ctx.stroke();
 
+    // Bold, prominent triangular arrowhead
     ctx.beginPath();
     ctx.moveTo(toX, toY);
-    ctx.lineTo(toX - headLen * Math.cos(angle - Math.PI / 6), toY - headLen * Math.sin(angle - Math.PI / 6));
-    ctx.lineTo(toX - headLen * Math.cos(angle + Math.PI / 6), toY - headLen * Math.sin(angle + Math.PI / 6));
+    ctx.lineTo(toX - headLen * Math.cos(angle - Math.PI / 5.5), toY - headLen * Math.sin(angle - Math.PI / 5.5));
+    ctx.lineTo(toX - headLen * Math.cos(angle + Math.PI / 5.5), toY - headLen * Math.sin(angle + Math.PI / 5.5));
     ctx.closePath();
     ctx.fill();
 
