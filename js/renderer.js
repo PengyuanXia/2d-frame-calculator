@@ -1945,17 +1945,8 @@ export class FrameRenderer {
       });
     });
 
-    const minPlotOffsetPixels = Math.max(9, 8 * (this.transform.scale / 40));
     const maxPlotOffsetPixels = Math.min(65, this.transform.scale * 1.25);
-
-    // Perceptual scaling: ensures even small non-zero forces have a clearly visible diagram rectangle
-    const calcOffsetAmount = (val) => {
-      if (Math.abs(val) < 1e-4) return 0;
-      const absVal = Math.abs(val);
-      const ratio = Math.min(1.0, absVal / globalMaxAbs);
-      const mag = minPlotOffsetPixels + (maxPlotOffsetPixels - minPlotOffsetPixels) * ratio;
-      return (val >= 0 ? 1 : -1) * mag;
-    };
+    const valueScale = maxPlotOffsetPixels / (globalMaxAbs || 1);
 
     // Global tracker to avoid duplicate and overlapping value tags
     const placedTags = [];
@@ -1982,10 +1973,10 @@ export class FrameRenderer {
         const pt = this.worldToPixel(sample.x, sample.z);
         const val = sample[type];
 
-        // Exact physical offset with perceptual minimum height:
+        // Exact physical offset:
         // For M: val > 0 points along +n_zeta (top/outer tension fiber), val < 0 points along -n_zeta (bottom/inner tension fiber)
         // For N/T: standard positive along +n_zeta, negative along -n_zeta
-        const offsetAmount = calcOffsetAmount(val);
+        const offsetAmount = val * valueScale;
 
         const diagX = pt.px + nx * offsetAmount;
         const diagY = pt.py + ny * offsetAmount;
@@ -2029,8 +2020,8 @@ export class FrameRenderer {
       // Annotate End Values (with clearance from member baseline and deduplication)
       const valI = diagramPoints[0].val;
       const valJ = diagramPoints[diagramPoints.length - 1].val;
-      const offsetI = calcOffsetAmount(valI);
-      const offsetJ = calcOffsetAmount(valJ);
+      const offsetI = valI * valueScale;
+      const offsetJ = valJ * valueScale;
 
       this.collectDiagramTag(placedTags, basePoints[0], diagramPoints[0], valI, strokeColor, nx, ny, offsetI, type);
       this.collectDiagramTag(placedTags, basePoints[basePoints.length - 1], diagramPoints[diagramPoints.length - 1], valJ, strokeColor, nx, ny, offsetJ, type);
@@ -2050,7 +2041,7 @@ export class FrameRenderer {
         }
       }
       if (maxMidIdx !== -1 && Math.abs(maxMidVal) > 0.05) {
-        const offsetMid = calcOffsetAmount(maxMidVal);
+        const offsetMid = maxMidVal * valueScale;
         this.collectDiagramTag(placedTags, basePoints[maxMidIdx], diagramPoints[maxMidIdx], maxMidVal, strokeColor, nx, ny, offsetMid, type);
       }
     });
@@ -2083,12 +2074,20 @@ export class FrameRenderer {
     for (const tag of tagsToDraw) {
       const dist = Math.hypot(targetX - tag.x, targetY - tag.y);
       if (dist < 42) {
-        // If values are equal / near equal at corner (e.g. corner moment equilibrium), skip duplicate!
-        if (Math.abs(Math.abs(val) - Math.abs(tag.val)) < 0.35) {
+        // For Bending Moment (M) at a 2-member rigid corner, deduplicate if values are equal
+        if (type === 'M' && Math.abs(Math.abs(val) - Math.abs(tag.val)) < 0.1) {
           return;
         }
-        // If different values (e.g. shear step), shift position
-        targetY += (targetY >= tag.y ? 18 : -18);
+        // For exact same signed value at the exact same point, skip duplicate
+        if (Math.abs(val - tag.val) < 0.05 && dist < 16) {
+          return;
+        }
+        // If different values (e.g. shear step jump at node +1 vs -1), offset along the member to show both clearly
+        if (Math.abs(targetX - tag.x) < 24) {
+          targetX += (val < 0 ? -22 : 22);
+        } else {
+          targetY += (targetY >= tag.y ? 18 : -18);
+        }
       }
     }
 
