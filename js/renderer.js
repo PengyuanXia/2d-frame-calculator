@@ -1945,8 +1945,22 @@ export class FrameRenderer {
       });
     });
 
+    const isTruss = this.frameData && this.frameData.structureType === 'truss';
+    const minPlotOffsetPixels = Math.max(8.5, 7.5 * (this.transform.scale / 40));
     const maxPlotOffsetPixels = Math.min(65, this.transform.scale * 1.25);
     const valueScale = maxPlotOffsetPixels / (globalMaxAbs || 1);
+
+    // In Truss mode: forces are strictly constant along each bar, so guarantee a minimum visible diagram width for loaded bars.
+    // In Frame mode: use exact linear scaling to perfectly preserve continuous triangles, parabolas, and zero-crossings.
+    const calcOffsetAmount = (val) => {
+      if (Math.abs(val) < 1e-4) return 0;
+      if (isTruss) {
+        const ratio = Math.min(1.0, Math.abs(val) / globalMaxAbs);
+        const mag = minPlotOffsetPixels + (maxPlotOffsetPixels - minPlotOffsetPixels) * ratio;
+        return (val >= 0 ? 1 : -1) * mag;
+      }
+      return val * valueScale;
+    };
 
     // Global tracker to avoid duplicate and overlapping value tags
     const placedTags = [];
@@ -1976,7 +1990,7 @@ export class FrameRenderer {
         // Exact physical offset:
         // For M: val > 0 points along +n_zeta (top/outer tension fiber), val < 0 points along -n_zeta (bottom/inner tension fiber)
         // For N/T: standard positive along +n_zeta, negative along -n_zeta
-        const offsetAmount = val * valueScale;
+        const offsetAmount = calcOffsetAmount(val);
 
         const diagX = pt.px + nx * offsetAmount;
         const diagY = pt.py + ny * offsetAmount;
@@ -2020,8 +2034,8 @@ export class FrameRenderer {
       // Annotate End Values (with clearance from member baseline and deduplication)
       const valI = diagramPoints[0].val;
       const valJ = diagramPoints[diagramPoints.length - 1].val;
-      const offsetI = valI * valueScale;
-      const offsetJ = valJ * valueScale;
+      const offsetI = calcOffsetAmount(valI);
+      const offsetJ = calcOffsetAmount(valJ);
 
       this.collectDiagramTag(placedTags, basePoints[0], diagramPoints[0], valI, strokeColor, nx, ny, offsetI, type);
       this.collectDiagramTag(placedTags, basePoints[basePoints.length - 1], diagramPoints[diagramPoints.length - 1], valJ, strokeColor, nx, ny, offsetJ, type);
@@ -2041,7 +2055,7 @@ export class FrameRenderer {
         }
       }
       if (maxMidIdx !== -1 && Math.abs(maxMidVal) > 0.05) {
-        const offsetMid = maxMidVal * valueScale;
+        const offsetMid = calcOffsetAmount(maxMidVal);
         this.collectDiagramTag(placedTags, basePoints[maxMidIdx], diagramPoints[maxMidIdx], maxMidVal, strokeColor, nx, ny, offsetMid, type);
       }
     });
