@@ -1108,17 +1108,16 @@ export class FrameCalculatorApp {
       const labelJ = elem.nodeJ || 'j';
 
       tr.innerHTML = `
-        <td><input type="text" class="poly-input text-center font-bold text-slate-800 font-mono text-[11.5px]" value="${elem.id}" placeholder="0" data-field="id"></td>
+        <td><input type="text" class="poly-input text-center font-bold text-slate-800 font-mono text-[11px]" value="${elem.id}" placeholder="0" data-field="id"></td>
         <td><select class="poly-input text-[11px] font-bold" data-field="nodeI">${optI}</select></td>
         <td><select class="poly-input text-[11px] font-bold" data-field="nodeJ">${optJ}</select></td>
-        <td><input type="number" step="0.1" min="0.01" class="poly-input text-center font-bold text-purple-700 font-mono text-[11.5px]" value="${elem.EJ !== undefined ? elem.EJ : 1.0}" placeholder="0" data-field="EJ"></td>
         <td>
-          <div class="flex items-center justify-center gap-2 text-[10.5px]">
-            <label class="flex items-center gap-1 cursor-pointer" title="Hinge at ${labelI} (Start Node)">
+          <div class="flex items-center justify-center gap-1.5 text-[10px]">
+            <label class="flex items-center gap-0.5 cursor-pointer" title="Hinge at ${labelI} (Start Node)">
               <input type="checkbox" class="poly-checkbox" ${elem.hingeI ? 'checked' : ''} data-field="hingeI">
               <span class="font-mono font-bold text-blue-700">${labelI}</span>
             </label>
-            <label class="flex items-center gap-1 cursor-pointer" title="Hinge at ${labelJ} (End Node)">
+            <label class="flex items-center gap-0.5 cursor-pointer" title="Hinge at ${labelJ} (End Node)">
               <input type="checkbox" class="poly-checkbox" ${elem.hingeJ ? 'checked' : ''} data-field="hingeJ">
               <span class="font-mono font-bold text-blue-700">${labelJ}</span>
             </label>
@@ -1138,14 +1137,6 @@ export class FrameCalculatorApp {
         this.frameData.elements[idx].id = newElemId;
         this.recalculate(true);
       });
-
-      const inpEJ = tr.querySelector('input[data-field="EJ"]');
-      if (inpEJ) {
-        inpEJ.addEventListener('change', (e) => {
-          this.frameData.elements[idx].EJ = parseFloat(e.target.value) || 1.0;
-          this.recalculate(true);
-        });
-      }
 
       tr.querySelectorAll('select').forEach(sel => {
         sel.addEventListener('change', (e) => {
@@ -1336,10 +1327,6 @@ export class FrameCalculatorApp {
             <select id="inpAddElemNodeJ" class="poly-input text-left font-medium text-xs px-3 py-2">${optJ}</select>
           </div>
         </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">${t.elemEJCol || 'Flexural Rigidity EJ'}</label>
-          <input type="number" id="inpAddElemEJ" step="0.1" min="0.01" class="poly-input text-left font-mono font-bold text-sm px-3 py-2 text-purple-700" value="1.0" placeholder="0">
-        </div>
         <div class="grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded border border-slate-200">
           <label class="flex items-center gap-2 text-xs font-bold text-slate-700">
             <input type="checkbox" id="inpAddElemHingeI" class="poly-checkbox"> ${t.hingeILabel}
@@ -1355,7 +1342,7 @@ export class FrameCalculatorApp {
       const eid = document.getElementById('inpAddElemId').value.trim() || `E${Date.now()}`;
       const nodeI = document.getElementById('inpAddElemNodeI').value;
       const nodeJ = document.getElementById('inpAddElemNodeJ').value;
-      const EJ = parseFloat(document.getElementById('inpAddElemEJ').value) || 1.0;
+      const EJ = 1.0;
       const hingeI = document.getElementById('inpAddElemHingeI').checked;
       const hingeJ = document.getElementById('inpAddElemHingeJ').checked;
 

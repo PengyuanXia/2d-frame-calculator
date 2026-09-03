@@ -70,12 +70,12 @@ export const TRANSLATIONS = {
     sidebarBadge: '2D Frame Calculator',
     sidebarSubBadge: 'Direct Stiffness Method (EJ = 1)',
 
-    // Support Types
+    // Support Types (Concise, no parenthesis to save space)
     supportNone: 'Free',
-    supportPin: 'Pin (Rx, Rz)',
-    supportRollerX: 'Roller X (free X, fixed Z)',
-    supportRollerZ: 'Roller Z (free Z, fixed X)',
-    supportFixed: 'Fixed (Rx, Rz, M)',
+    supportPin: 'Pin',
+    supportRollerX: 'Roller X',
+    supportRollerZ: 'Roller Z',
+    supportFixed: 'Fixed',
 
     // Modal Add Dialogs
     modalAddNodeTitle: 'Add New Node',
@@ -268,12 +268,12 @@ export const TRANSLATIONS = {
     sidebarBadge: 'Kalkulator Ram 2D',
     sidebarSubBadge: 'Metoda Sztywności (EJ = 1)',
 
-    // Support Types
+    // Support Types (Concise, no parenthesis to save space)
     supportNone: 'Swobodny',
-    supportPin: 'Przegub (Rx, Rz)',
-    supportRollerX: 'Podpora przesuwna X',
-    supportRollerZ: 'Podpora przesuwna Z',
-    supportFixed: 'Utwierdzenie (Rx, Rz, M)',
+    supportPin: 'Przegub',
+    supportRollerX: 'Przesuwna X',
+    supportRollerZ: 'Przesuwna Z',
+    supportFixed: 'Utwierdzenie',
 
     // Modal Add Dialogs
     modalAddNodeTitle: 'Dodaj nowy węzeł',
