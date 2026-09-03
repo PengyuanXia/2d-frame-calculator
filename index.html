@@ -56,21 +56,6 @@
         </button>
       </div>
 
-      <!-- Mode Switcher: Frame vs Truss & Help (?) -->
-      <div class="ribbon-mode-switch">
-        <div class="mode-switch-group">
-          <button class="mode-switch-btn active" id="btnModeFrame" data-mode="frame" title="2D Frame Analysis (Axial N, Shear T, Bending M)">
-            <span id="lblModeFrameText">🏢 Frame</span>
-          </button>
-          <button class="mode-switch-btn" id="btnModeTruss" data-mode="truss" title="2D Pin-Jointed Truss Analysis (Axial Force N only)">
-            <span id="lblModeTrussText">🌉 Truss</span>
-          </button>
-        </div>
-        <button class="btn-mode-help" id="btnTrussModeHelp" title="What is Truss Mode? (Educational Guide)">
-          ?
-        </button>
-      </div>
-
       <div class="ribbon-center">
         <div class="radio-pill-group">
           <button class="radio-pill active" data-view="reactions">
@@ -313,6 +298,21 @@
             <input type="checkbox" id="chkShowElemLabels" checked>
             <span id="lblShowElemLabelsText">📏 Members</span>
           </label>
+        </div>
+
+        <!-- Canvas Floating Mode Switcher (Under Member visible button) -->
+        <div class="canvas-mode-switch-overlay">
+          <div class="mode-switch-group">
+            <button class="mode-switch-btn active" id="btnModeFrame" data-mode="frame" title="2D Frame Analysis (Axial N, Shear T, Bending M)">
+              <span id="lblModeFrameText">🏢 Frame</span>
+            </button>
+            <button class="mode-switch-btn" id="btnModeTruss" data-mode="truss" title="2D Pin-Jointed Truss Analysis (Axial Force N only)">
+              <span id="lblModeTrussText">🌉 Truss</span>
+            </button>
+          </div>
+          <button class="btn-mode-help" id="btnTrussModeHelp" title="What is Truss Mode? (Educational Guide)">
+            ?
+          </button>
         </div>
 
         <!-- Coordinate System Indicator Badge in canvas corner -->
