@@ -732,7 +732,7 @@ input[type=number] {
 
 .canvas-mode-switch-overlay {
   position: absolute;
-  top: 48px;
+  top: 58px;
   right: 14px;
   z-index: 20;
   display: flex;
