@@ -36,7 +36,7 @@ export const TRANSLATIONS = {
     heroWelcomeTitle: 'Select a Frame Configuration to Start',
     heroWelcomeSubtitle: 'Choose a benchmark template or start a custom design to instantly view reactions, Normal Force N, Shear Force T, and Bending Moment M diagrams.',
     blankFrameTitle: 'Custom Design',
-    blankFrameDesc: 'Start with a completely clean canvas with no preset elements to build your structure from scratch.',
+    blankFrameDesc: '1. Click "+ Add Node" and click "Create Member" after that. 2. Or select a benchmark preset.',
     
     // Sidebar Cards
     nodesTitle: 'Nodes (Coordinates x, z)',
@@ -234,7 +234,7 @@ export const TRANSLATIONS = {
     heroWelcomeTitle: 'Wybierz schemat ramy na start',
     heroWelcomeSubtitle: 'Wybierz jeden z klasycznych schematów lub stwórz własny projekt, aby zobaczyć reakcje, wykres sił osiowych N, sił tnących T oraz momentów M.',
     blankFrameTitle: 'Własny projekt',
-    blankFrameDesc: 'Rozpocznij od czystego obszaru roboczego bez zdefiniowanych elementów, aby stworzyć własny schemat od zera.',
+    blankFrameDesc: '1. Kliknij „+ Dodaj węzeł”, a następnie „Utwórz pręt”. 2. Lub wybierz gotowy schemat.',
     
     // Sidebar Cards
     nodesTitle: 'Węzły ramy (Współrzędne x, z)',

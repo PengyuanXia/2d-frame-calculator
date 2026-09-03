@@ -12,8 +12,8 @@ export const CUSTOM_DESIGN_PRESET = {
     pl: '✨ Własny projekt (Czyste płótno)'
   },
   description: {
-    en: 'Start with a completely clean canvas with no preset elements to build your structure from scratch.',
-    pl: 'Rozpocznij od czystego obszaru roboczego bez zdefiniowanych elementów, aby stworzyć własny schemat od zera.'
+    en: '1. Click "+ Add Node" and click "Create Member" after that. 2. Or select a benchmark preset.',
+    pl: '1. Kliknij „+ Dodaj węzeł”, a następnie „Utwórz pręt”. 2. Lub wybierz gotowy schemat.'
   },
   data: {
     nodes: [],
