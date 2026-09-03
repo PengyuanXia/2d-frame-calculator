@@ -570,10 +570,10 @@ export class FrameSolver {
         fixedDofs.add(dofU);
         fixedDofs.add(dofW);
         supportReactionCount += 2;
-      } else if (sup === 'roller') { // horizontal roller (restrains z / vertical displacement)
+      } else if (sup === 'roller_x' || sup === 'roller') { // Roller free in X, fixed in Z (vertical restraint)
         fixedDofs.add(dofW);
         supportReactionCount += 1;
-      } else if (sup === 'roller_x') { // vertical roller (restrains x / horizontal displacement)
+      } else if (sup === 'roller_z') { // Roller free in Z, fixed in X (horizontal restraint)
         fixedDofs.add(dofU);
         supportReactionCount += 1;
       }

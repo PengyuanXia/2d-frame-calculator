@@ -31,6 +31,7 @@ export class FrameCalculatorApp {
     // Undo / Redo History Stacks
     this.undoStack = [];
     this.redoStack = [];
+    this.presets = PRESETS;
 
     this.initDOM();
     this.initRenderer();

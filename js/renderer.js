@@ -1620,7 +1620,7 @@ export class FrameRenderer {
       ctx.moveTo(px - triW * 0.8, py + triH);
       ctx.lineTo(px + triW * 0.8, py + triH);
       ctx.stroke();
-    } else if (node.support === 'roller_x') {
+    } else if (node.support === 'roller_x' || node.support === 'roller') {
       // Roller free in X (rollers below triangle)
       const triH = 16 * scale;
       const triW = 18 * scale;

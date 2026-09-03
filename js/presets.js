@@ -193,7 +193,7 @@ export const PRESETS = [
       nodes: [
         { id: 'N1', x: 0.0, z: 0.0, support: 'pin' },
         { id: 'N2', x: 3.0, z: 0.0, support: 'none' },
-        { id: 'N3', x: 6.0, z: 0.0, support: 'roller' },
+        { id: 'N3', x: 6.0, z: 0.0, support: 'roller_x' },
         { id: 'N4', x: 1.5, z: 2.5, support: 'none' },
         { id: 'N5', x: 4.5, z: 2.5, support: 'none' }
       ],
@@ -232,7 +232,7 @@ export const PRESETS = [
         { id: 'N2', x: 2.0, z: 0.0, support: 'none' },
         { id: 'N3', x: 4.0, z: 0.0, support: 'none' },
         { id: 'N4', x: 6.0, z: 0.0, support: 'none' },
-        { id: 'N5', x: 8.0, z: 0.0, support: 'roller' },
+        { id: 'N5', x: 8.0, z: 0.0, support: 'roller_x' },
         { id: 'N6', x: 2.0, z: 2.5, support: 'none' },
         { id: 'N7', x: 4.0, z: 2.5, support: 'none' },
         { id: 'N8', x: 6.0, z: 2.5, support: 'none' }
@@ -276,7 +276,7 @@ export const PRESETS = [
       nodes: [
         { id: 'N1', x: 0.0, z: 0.0, support: 'pin' },
         { id: 'N2', x: 3.0, z: 0.0, support: 'none' },
-        { id: 'N3', x: 6.0, z: 0.0, support: 'roller' },
+        { id: 'N3', x: 6.0, z: 0.0, support: 'roller_x' },
         { id: 'N4', x: 1.5, z: 1.2, support: 'none' },
         { id: 'N5', x: 3.0, z: 2.4, support: 'none' },
         { id: 'N6', x: 4.5, z: 1.2, support: 'none' }
