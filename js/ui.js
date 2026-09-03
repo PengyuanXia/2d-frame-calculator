@@ -103,6 +103,10 @@ export class FrameCalculatorApp {
     // Floating Canvas Action Buttons
     this.btnClearCanvas = document.getElementById('btnClearCanvas');
     this.btnClearCanvasText = document.getElementById('btnClearCanvasText');
+    this.btnFloatingAddNodalLoad = document.getElementById('btnFloatingAddNodalLoad');
+    this.btnFloatingAddNodalLoadText = document.getElementById('btnFloatingAddNodalLoadText');
+    this.btnFloatingAddDistLoad = document.getElementById('btnFloatingAddDistLoad');
+    this.btnFloatingAddDistLoadText = document.getElementById('btnFloatingAddDistLoadText');
 
     // Foldable Sidebar Panel
     this.isSidebarCollapsed = false;
@@ -329,6 +333,20 @@ export class FrameCalculatorApp {
     // Clear Canvas Button (Directs to empty frame preset)
     if (this.btnClearCanvas) {
       this.btnClearCanvas.addEventListener('click', () => this.clearCanvasToEmptyPreset());
+    }
+
+    // Floating Add Nodal & Distributed Load Buttons
+    if (this.btnFloatingAddNodalLoad) {
+      this.btnFloatingAddNodalLoad.addEventListener('click', () => {
+        this.hideHeroOverlay();
+        this.openAddNodalLoadModal();
+      });
+    }
+    if (this.btnFloatingAddDistLoad) {
+      this.btnFloatingAddDistLoad.addEventListener('click', () => {
+        this.hideHeroOverlay();
+        this.openAddDistLoadModal();
+      });
     }
 
     // Foldable Sidebar Panel Listeners
@@ -586,6 +604,20 @@ export class FrameCalculatorApp {
     const btnClearCanvas = document.getElementById('btnClearCanvas');
     if (btnClearCanvas) {
       btnClearCanvas.title = t.clearCanvasTooltip || 'Clear canvas and direct to empty frame preset';
+    }
+
+    if (this.btnFloatingAddNodalLoadText) {
+      this.btnFloatingAddNodalLoadText.textContent = t.addNodalLoadFloatBtn || 'Add Nodal Load';
+    }
+    if (this.btnFloatingAddNodalLoad) {
+      this.btnFloatingAddNodalLoad.title = t.addNodalLoadFloatTooltip || 'Add Nodal Force or Moment (Fx, Fz, M)';
+    }
+
+    if (this.btnFloatingAddDistLoadText) {
+      this.btnFloatingAddDistLoadText.textContent = t.addDistLoadFloatBtn || 'Add Distributed Load';
+    }
+    if (this.btnFloatingAddDistLoad) {
+      this.btnFloatingAddDistLoad.title = t.addDistLoadFloatTooltip || 'Add Member Distributed Load (qx, qz)';
     }
 
     if (this.lblAutoSplitText) {
