@@ -159,17 +159,17 @@ export const PRESETS = [
       nodes: [
         { id: 'N1', x: 0.0, z: 0.0, support: 'fixed' },
         { id: 'N2', x: 0.0, z: 4.0, support: 'none' },
-        { id: 'N3', x: 5.0, z: 4.0, support: 'none' },
-        { id: 'N4', x: 5.0, z: 0.0, support: 'fixed' },
-        { id: 'N5', x: 10.0, z: 4.0, support: 'none' },
-        { id: 'N6', x: 10.0, z: 0.0, support: 'fixed' }
+        { id: 'N3', x: 5.0, z: 0.0, support: 'fixed' },
+        { id: 'N4', x: 5.0, z: 4.0, support: 'none' },
+        { id: 'N5', x: 10.0, z: 0.0, support: 'fixed' },
+        { id: 'N6', x: 10.0, z: 4.0, support: 'none' }
       ],
       elements: [
         { id: 'E1', nodeI: 'N1', nodeJ: 'N2', EJ: 1.0, hingeI: false, hingeJ: false },
-        { id: 'E2', nodeI: 'N2', nodeJ: 'N3', EJ: 1.0, hingeI: false, hingeJ: false },
-        { id: 'E3', nodeI: 'N4', nodeJ: 'N3', EJ: 1.0, hingeI: false, hingeJ: false },
-        { id: 'E4', nodeI: 'N3', nodeJ: 'N5', EJ: 1.0, hingeI: false, hingeJ: false },
-        { id: 'E5', nodeI: 'N6', nodeJ: 'N5', EJ: 1.0, hingeI: false, hingeJ: false }
+        { id: 'E2', nodeI: 'N2', nodeJ: 'N4', EJ: 1.0, hingeI: false, hingeJ: false },
+        { id: 'E3', nodeI: 'N3', nodeJ: 'N4', EJ: 1.0, hingeI: false, hingeJ: false },
+        { id: 'E4', nodeI: 'N4', nodeJ: 'N6', EJ: 1.0, hingeI: false, hingeJ: false },
+        { id: 'E5', nodeI: 'N5', nodeJ: 'N6', EJ: 1.0, hingeI: false, hingeJ: false }
       ],
       nodalLoads: [],
       distLoads: [
