@@ -1266,68 +1266,33 @@ export class FrameRenderer {
     ctx.save();
 
     const isPl = this.lang === 'pl';
-    const title = isPl ? 'Własny projekt — Gotowy do tworzenia' : 'Custom Design — Ready to Build';
-    const subtitle = isPl ? 'Wskazówki jak rozpocząć projektowanie ramy:' : 'How to start designing your frame structure:';
+    const title = isPl ? 'Własny projekt — Gotowy do projektowania' : 'Custom Design — Ready for Design';
     const step1 = isPl 
-      ? '1. Kliknij „+ Dodaj węzeł” w lewym panelu i następnie „Utwórz pręt”' 
-      : '1. Click "+ Add Node" (or Draw Nodes) and click "Create Member" after that';
+      ? '1. Kliknij „+ Dodaj węzeł” i następnie „Utwórz pręt”' 
+      : '1. Click "+ Add Node" and click "Create Member" after that';
     const step2 = isPl 
-      ? '2. Lub wybierz gotowy schemat z menu „📚 Przykłady”' 
-      : '2. Or select a benchmark preset from "📚 Presets"';
+      ? '2. Lub wybierz gotowy schemat z „Przykłady”' 
+      : '2. Or select a benchmark preset from "Presets"';
 
     const cx = this.width / 2;
     const cy = this.height / 2;
 
-    const boxW = Math.min(520, this.width - 40);
-    const boxH = 142;
-    const boxX = cx - boxW / 2;
-    const boxY = cy - boxH / 2;
-
-    // Elegant floating guidance card
-    ctx.fillStyle = '#ffffff';
-    ctx.strokeStyle = '#cbd5e1';
-    ctx.lineWidth = 1.5;
-    ctx.shadowColor = 'rgba(15, 23, 42, 0.08)';
-    ctx.shadowBlur = 14;
-    ctx.shadowOffsetY = 4;
-
-    ctx.beginPath();
-    ctx.roundRect(boxX, boxY, boxW, boxH, 10);
-    ctx.fill();
-    ctx.stroke();
-
-    // Reset shadow
-    ctx.shadowColor = 'transparent';
-
-    // Header Title
-    ctx.fillStyle = '#1e293b';
-    ctx.font = 'bold 15px Inter, -apple-system, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('📐 ' + title, cx, boxY + 28);
 
-    // Subtitle
-    ctx.fillStyle = '#64748b';
-    ctx.font = '500 12px Inter, -apple-system, sans-serif';
-    ctx.fillText(subtitle, cx, boxY + 48);
-
-    // Subtle divider
-    ctx.strokeStyle = '#e2e8f0';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(boxX + 20, boxY + 60);
-    ctx.lineTo(boxX + boxW - 20, boxY + 60);
-    ctx.stroke();
+    // Title line
+    ctx.font = 'bold 16px Inter, -apple-system, sans-serif';
+    ctx.fillStyle = '#334155';
+    ctx.fillText('📐  ' + title, cx, cy - 20);
 
     // Step 1
-    ctx.textAlign = 'left';
-    ctx.fillStyle = '#334155';
-    ctx.font = '600 12.5px Inter, -apple-system, sans-serif';
-    ctx.fillText(step1, boxX + 24, boxY + 88);
+    ctx.font = '500 13.5px Inter, -apple-system, sans-serif';
+    ctx.fillStyle = '#64748b';
+    ctx.fillText(step1, cx, cy + 10);
 
     // Step 2
-    ctx.fillStyle = '#2563eb';
-    ctx.font = '600 12.5px Inter, -apple-system, sans-serif';
-    ctx.fillText(step2, boxX + 24, boxY + 116);
+    ctx.font = '500 13.5px Inter, -apple-system, sans-serif';
+    ctx.fillStyle = '#64748b';
+    ctx.fillText(step2, cx, cy + 34);
 
     ctx.restore();
   }
