@@ -212,7 +212,7 @@ export const PRESETS = [
         { id: 'L3', nodeId: 'N5', Fx: 0.0, Fz: 20.0, M: 0.0 }
       ],
       distLoads: [],
-      currentView: 'normal'
+      currentView: 'reactions'
     }
   },
   {
@@ -258,7 +258,7 @@ export const PRESETS = [
         { id: 'L3', nodeId: 'N4', Fx: 0.0, Fz: 30.0, M: 0.0 }
       ],
       distLoads: [],
-      currentView: 'normal'
+      currentView: 'reactions'
     }
   },
   {
@@ -298,7 +298,7 @@ export const PRESETS = [
         { id: 'L3', nodeId: 'N6', Fx: 0.0, Fz: 15.0, M: 0.0 }
       ],
       distLoads: [],
-      currentView: 'normal'
+      currentView: 'reactions'
     }
   }
 ];

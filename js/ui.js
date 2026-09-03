@@ -1514,7 +1514,7 @@ export class FrameCalculatorApp {
     this.recalculate();
     const isPl = this.lang === 'pl';
     this.showToast(type === 'truss'
-      ? (isPl ? '🌉 Przełączono na Tryb Kratownicy (Tylko siły osiowe N)' : '🏢 Przełączono na Tryb Ramy Płaskiej (N, T, M)')
+      ? (isPl ? '🌉 Przełączono na Tryb Kratownicy (Tylko siły osiowe N)' : '🌉 Switched to 2D Truss Mode (Axial Force N only)')
       : (isPl ? '🏢 Przełączono na Tryb Ramy Płaskiej (N, T, M)' : '🏢 Switched to 2D Frame Mode (N, T, M)')
     );
   }
