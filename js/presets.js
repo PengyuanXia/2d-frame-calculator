@@ -5,7 +5,29 @@
  * Notation: N, T, M, EJ = 1.
  */
 
+export const CUSTOM_DESIGN_PRESET = {
+  id: 'custom_design',
+  name: {
+    en: '✨ Custom Design (Blank Canvas)',
+    pl: '✨ Własny projekt (Czyste płótno)'
+  },
+  description: {
+    en: 'Start with a completely clean canvas with no preset elements to build your structure from scratch.',
+    pl: 'Rozpocznij od czystego obszaru roboczego bez zdefiniowanych elementów, aby stworzyć własny schemat od zera.'
+  },
+  data: {
+    nodes: [],
+    elements: [],
+    nodalLoads: [],
+    distLoads: [],
+    currentView: 'reactions'
+  }
+};
+
+export const EMPTY_FRAME_PRESET = CUSTOM_DESIGN_PRESET;
+
 export const PRESETS = [
+  CUSTOM_DESIGN_PRESET,
   {
     id: 'portal_frame_udl',
     name: {
@@ -159,8 +181,8 @@ export const PRESETS = [
   {
     id: 'warren_truss',
     name: {
-      en: '5. Warren Truss with Apex Point Load (Truss Mode)',
-      pl: '5. Kratownica Warrena z obciążeniem węzłowym (Tryb kratownicy)'
+      en: '6. Warren Truss with Apex Point Load (Truss Mode)',
+      pl: '6. Kratownica Warrena z obciążeniem węzłowym (Tryb kratownicy)'
     },
     description: {
       en: 'Classical triangular web Warren truss (span L = 6m, height h = 2.5m) subjected to downward nodal loads at top and bottom chord joints. Pin-jointed pure axial force analysis.',
@@ -196,8 +218,8 @@ export const PRESETS = [
   {
     id: 'pratt_bridge_truss',
     name: {
-      en: '6. Pratt Bridge Truss with Deck Loading (Truss Mode)',
-      pl: '6. Kratownica mostowa Pratta z obciążeniem pomostu (Tryb kratownicy)'
+      en: '7. Pratt Bridge Truss with Deck Loading (Truss Mode)',
+      pl: '7. Kratownica mostowa Pratta z obciążeniem pomostu (Tryb kratownicy)'
     },
     description: {
       en: 'Standard 4-panel Pratt bridge truss (span L = 8m, height h = 2.5m) under joint gravity loads on the bottom roadway chord. Demonstrates tension diagonals and compression verticals.',
@@ -242,8 +264,8 @@ export const PRESETS = [
   {
     id: 'howe_roof_truss',
     name: {
-      en: '7. Pitched Howe Roof Truss with Symmetrical Loading (Truss Mode)',
-      pl: '7. Kratownica dachowa Howe’a z obciążeniem symetrycznym (Tryb kratownicy)'
+      en: '8. Pitched Howe Roof Truss with Symmetrical Loading (Truss Mode)',
+      pl: '8. Kratownica dachowa Howe’a z obciążeniem symetrycznym (Tryb kratownicy)'
     },
     description: {
       en: 'Gable pitched roof truss (span L = 6m, ridge height h = 2.4m) under symmetrical gravity snow/dead loads at top chord joints.',
@@ -280,22 +302,3 @@ export const PRESETS = [
     }
   }
 ];
-
-export const EMPTY_FRAME_PRESET = {
-  id: 'empty_frame',
-  name: {
-    en: 'Empty Frame (Create from Scratch)',
-    pl: 'Pusty schemat (Czysta rama)'
-  },
-  description: {
-    en: 'Start with a completely empty canvas with no preset elements to build your structure from scratch.',
-    pl: 'Rozpocznij od pustego obszaru bez żadnych zdefiniowanych elementów, aby stworzyć własny schemat od zera.'
-  },
-  data: {
-    nodes: [],
-    elements: [],
-    nodalLoads: [],
-    distLoads: [],
-    currentView: 'reactions'
-  }
-};

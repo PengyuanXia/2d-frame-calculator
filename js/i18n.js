@@ -34,9 +34,9 @@ export const TRANSLATIONS = {
 
     // Hero Welcome Overlay on Canvas
     heroWelcomeTitle: 'Select a Frame Configuration to Start',
-    heroWelcomeSubtitle: 'Choose a benchmark template to instantly view reactions, Normal Force N, Shear Force T, and Bending Moment M diagrams.',
-    blankFrameTitle: 'Empty Frame (Create from Scratch)',
-    blankFrameDesc: 'Start with a completely empty canvas with no preset elements to build your structure from scratch.',
+    heroWelcomeSubtitle: 'Choose a benchmark template or start a custom design to instantly view reactions, Normal Force N, Shear Force T, and Bending Moment M diagrams.',
+    blankFrameTitle: 'Custom Design',
+    blankFrameDesc: 'Start with a completely clean canvas with no preset elements to build your structure from scratch.',
     
     // Sidebar Cards
     nodesTitle: 'Nodes (Coordinates x, z)',
@@ -232,9 +232,9 @@ export const TRANSLATIONS = {
 
     // Hero Welcome Overlay on Canvas
     heroWelcomeTitle: 'Wybierz schemat ramy na start',
-    heroWelcomeSubtitle: 'Wybierz jeden z klasycznych schematów, aby natychmiast zobaczyć reakcje, wykres sił osiowych N, sił tnących T oraz momentów M.',
-    blankFrameTitle: 'Pusty schemat (Czysta rama)',
-    blankFrameDesc: 'Rozpocznij od pustego obszaru bez żadnych zdefiniowanych elementów, aby stworzyć własny schemat od zera.',
+    heroWelcomeSubtitle: 'Wybierz jeden z klasycznych schematów lub stwórz własny projekt, aby zobaczyć reakcje, wykres sił osiowych N, sił tnących T oraz momentów M.',
+    blankFrameTitle: 'Własny projekt',
+    blankFrameDesc: 'Rozpocznij od czystego obszaru roboczego bez zdefiniowanych elementów, aby stworzyć własny schemat od zera.',
     
     // Sidebar Cards
     nodesTitle: 'Węzły ramy (Współrzędne x, z)',

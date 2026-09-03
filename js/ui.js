@@ -458,58 +458,50 @@ export class FrameCalculatorApp {
     if (this.heroWelcomeSubtitle) this.heroWelcomeSubtitle.textContent = t.heroWelcomeSubtitle;
 
     PRESETS.forEach(preset => {
+      const isCustom = preset.id === 'custom_design' || preset.id === 'empty_frame';
       const title = typeof preset.name === 'object' ? (preset.name[this.lang] || preset.name.en) : preset.name;
       const desc = typeof preset.description === 'object' ? (preset.description[this.lang] || preset.description.en) : preset.description;
 
       const card = document.createElement('div');
       card.className = 'preset-hero-card';
+      if (isCustom) {
+        card.style.backgroundColor = '#f8fafc';
+        card.style.borderStyle = 'dashed';
+        card.style.borderColor = '#3b82f6';
+      }
+
+      const badgeHtml = isCustom
+        ? `<span style="font-size: 11px; font-family: monospace; font-weight: bold; color: #1d4ed8; background: #dbeafe; padding: 2px 6px; border-radius: 4px; white-space: nowrap; flex-shrink: 0;">Blank</span>`
+        : `<span style="font-size: 11px; font-family: monospace; font-weight: bold; color: #1d4ed8; background: #dbeafe; padding: 2px 6px; border-radius: 4px; white-space: nowrap; flex-shrink: 0;">${preset.data.elements.length} bars</span>`;
+
+      const actionHtml = isCustom
+        ? `<span>✏️ Create from Scratch</span><span>+</span>`
+        : `<span>⚡ Load Configuration</span><span>&rarr;</span>`;
+
       card.innerHTML = `
         <div>
           <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;">
-            <span class="hero-card-title">${title}</span>
-            <span style="font-size: 11px; font-family: monospace; font-weight: bold; color: #1d4ed8; background: #dbeafe; padding: 2px 6px; border-radius: 4px; white-space: nowrap; flex-shrink: 0;">${preset.data.elements.length} bars</span>
+            <span class="hero-card-title" ${isCustom ? 'style="color: #1e40af;"' : ''}>${title}</span>
+            ${badgeHtml}
           </div>
           <div class="hero-card-desc">${desc}</div>
         </div>
         <div style="margin-top: 12px; padding-top: 8px; border-top: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: 600; color: #2563eb;">
-          <span>⚡ Load Configuration</span>
-          <span>&rarr;</span>
+          ${actionHtml}
         </div>
       `;
 
       card.addEventListener('click', () => {
-        this.loadPreset(preset);
+        if (isCustom) {
+          this.clearCanvasToEmptyPreset();
+        } else {
+          this.loadPreset(preset);
+        }
         this.hideHeroOverlay();
       });
 
       this.heroPresetsGrid.appendChild(card);
     });
-
-    // Blank Frame Option (True blank frame with 0 nodes and 0 elements)
-    const blankCard = document.createElement('div');
-    blankCard.className = 'preset-hero-card';
-    blankCard.style.backgroundColor = '#f8fafc';
-    blankCard.style.borderStyle = 'dashed';
-    blankCard.style.borderColor = '#cbd5e1';
-    blankCard.innerHTML = `
-      <div>
-        <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;">
-          <span class="hero-card-title" style="color: #1e293b;">✨ ${t.blankFrameTitle}</span>
-          <span style="font-size: 11px; font-family: monospace; font-weight: bold; color: #475569; background: #e2e8f0; padding: 2px 6px; border-radius: 4px; white-space: nowrap; flex-shrink: 0;">Blank</span>
-        </div>
-        <div class="hero-card-desc">${t.blankFrameDesc}</div>
-      </div>
-      <div style="margin-top: 12px; padding-top: 8px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: 600; color: #475569;">
-        <span>Create from Scratch</span>
-        <span>+</span>
-      </div>
-    `;
-
-    blankCard.addEventListener('click', () => {
-      this.clearCanvasToEmptyPreset();
-    });
-
-    this.heroPresetsGrid.appendChild(blankCard);
   }
 
   toggleLanguage() {
