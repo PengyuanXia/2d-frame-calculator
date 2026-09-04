@@ -966,9 +966,9 @@ export class FrameRenderer {
       this.isDrawNodeMode = false;
       this.isDrawElementMode = false;
 
-      // Render clean structure and loads only without reaction badges or N,T,M diagrams
+      // Render clean structure and loads only without reaction badges, N/T/M diagrams, node IDs, or element IDs
       this.ctx.clearRect(0, 0, this.width, this.height);
-      this.drawStructure(1.0, true);
+      this.drawStructure(1.0, true, { hideNodeIds: true, hideElemIds: true, showLengthsOnly: true });
 
       const dataUrl = canvas.toDataURL('image/png');
 
@@ -1429,7 +1429,7 @@ export class FrameRenderer {
     ctx.restore();
   }
 
-  drawStructure(scale = 1.0, showLoads = true) {
+  drawStructure(scale = 1.0, showLoads = true, options = {}) {
     const ctx = this.ctx;
     const nodeMap = new Map();
 
@@ -1472,8 +1472,8 @@ export class FrameRenderer {
       ctx.lineTo(endPx, endPy);
       ctx.stroke();
 
-      // Member ID & Length Tag at Midpoint (only when showElemLabels is true)
-      if (this.showElemLabels) {
+      // Member ID & Length Tag at Midpoint (only when showElemLabels is true or showLengthsOnly on unsolved export)
+      if (this.showElemLabels || options.showLengthsOnly) {
         const midX = (p1.px + p2.px) / 2;
         const midY = (p1.py + p2.py) / 2;
         const L_world = Math.hypot(nJ.x - nI.x, nJ.z - nI.z);
@@ -1482,7 +1482,10 @@ export class FrameRenderer {
         const tagX = midX + nx * perpDist;
         const tagY = midY + ny * perpDist;
 
-        const tagText = `${elem.id} (${formatNum(L_world)}m)`;
+        const tagText = options.hideElemIds
+          ? `${formatNum(L_world)}m`
+          : `${elem.id} (${formatNum(L_world)}m)`;
+
         ctx.save();
         ctx.font = `bold ${11.5 * scale}px 'JetBrains Mono', monospace`;
         const metrics = ctx.measureText(tagText);
@@ -1551,7 +1554,7 @@ export class FrameRenderer {
     // 5. Draw Node Badges
     (this.frameData.nodes || []).forEach(node => {
       const p = this.worldToPixel(node.x, node.z);
-      this.drawNodeBadge(p.px, p.py, node.id, scale);
+      this.drawNodeBadge(p.px, p.py, node.id, scale, options);
     });
 
     ctx.restore();
@@ -1581,7 +1584,7 @@ export class FrameRenderer {
     ctx.restore();
   }
 
-  drawNodeBadge(px, py, nodeId, scale) {
+  drawNodeBadge(px, py, nodeId, scale, options = {}) {
     const ctx = this.ctx;
     ctx.save();
 
@@ -1591,8 +1594,8 @@ export class FrameRenderer {
     ctx.arc(px, py, 4.0 * scale, 0, Math.PI * 2);
     ctx.fill();
 
-    // Node ID Text label (e.g. N1, N4 in blue) - only when showNodeLabels is true
-    if (this.showNodeLabels) {
+    // Node ID Text label (e.g. N1, N4 in blue) - only when showNodeLabels is true and not hidden
+    if (this.showNodeLabels && !options.hideNodeIds) {
       ctx.fillStyle = '#2563eb';
       ctx.font = `bold ${12 * scale}px 'JetBrains Mono', monospace`;
       ctx.textAlign = 'left';
