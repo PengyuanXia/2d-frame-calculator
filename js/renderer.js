@@ -966,9 +966,9 @@ export class FrameRenderer {
       this.isDrawNodeMode = false;
       this.isDrawElementMode = false;
 
-      // Render clean structure and loads only without reaction badges, N/T/M diagrams, node IDs, or element IDs
+      // Render clean structure and loads only: NO node labels, NO element labels, NO length info, NO reactions/diagrams
       this.ctx.clearRect(0, 0, this.width, this.height);
-      this.drawStructure(1.0, true, { hideNodeIds: true, hideElemIds: true, showLengthsOnly: true });
+      this.drawStructure(1.0, true, { hideNodeLabels: true, hideElemLabels: true });
 
       const dataUrl = canvas.toDataURL('image/png');
 
@@ -1472,8 +1472,8 @@ export class FrameRenderer {
       ctx.lineTo(endPx, endPy);
       ctx.stroke();
 
-      // Member ID & Length Tag at Midpoint (only when showElemLabels is true or showLengthsOnly on unsolved export)
-      if (this.showElemLabels || options.showLengthsOnly) {
+      // Member ID & Length Tag at Midpoint (only when showElemLabels is true and not hideElemLabels)
+      if (this.showElemLabels && !options.hideElemLabels) {
         const midX = (p1.px + p2.px) / 2;
         const midY = (p1.py + p2.py) / 2;
         const L_world = Math.hypot(nJ.x - nI.x, nJ.z - nI.z);
@@ -1482,9 +1482,7 @@ export class FrameRenderer {
         const tagX = midX + nx * perpDist;
         const tagY = midY + ny * perpDist;
 
-        const tagText = options.hideElemIds
-          ? `${formatNum(L_world)}m`
-          : `${elem.id} (${formatNum(L_world)}m)`;
+        const tagText = `${elem.id} (${formatNum(L_world)}m)`;
 
         ctx.save();
         ctx.font = `bold ${11.5 * scale}px 'JetBrains Mono', monospace`;
@@ -1595,7 +1593,7 @@ export class FrameRenderer {
     ctx.fill();
 
     // Node ID Text label (e.g. N1, N4 in blue) - only when showNodeLabels is true and not hidden
-    if (this.showNodeLabels && !options.hideNodeIds) {
+    if (this.showNodeLabels && !options.hideNodeIds && !options.hideNodeLabels) {
       ctx.fillStyle = '#2563eb';
       ctx.font = `bold ${12 * scale}px 'JetBrains Mono', monospace`;
       ctx.textAlign = 'left';
