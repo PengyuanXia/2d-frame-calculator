@@ -36,7 +36,31 @@
           <button class="menu-btn" id="btnLoadModel" title="Load frame structure from file">📂 Load</button>
           <input type="file" id="inpModelFile" accept=".json" style="display: none;">
           <button class="menu-btn" id="btnShareLink" title="Copy shareable link to clipboard">🔗 Share</button>
-          <button class="menu-btn" id="btnExportPNG">Export PNG</button>
+          
+          <!-- Export PNG Dropdown -->
+          <div class="export-dropdown-wrapper">
+            <button class="menu-btn" id="btnExportPNG" title="Export diagram as PNG image">
+              <span id="btnExportPNGText">🖼️ Export PNG</span>
+              <span class="dropdown-arrow" id="exportPngArrow" style="margin-left: 4px; font-size: 10px;">▾</span>
+            </button>
+            <div class="export-dropdown-menu hidden" id="exportDropdownMenu">
+              <button class="export-menu-item" id="btnExportCurrentView">
+                <span class="export-item-icon">📊</span>
+                <div class="export-item-text">
+                  <div class="export-item-title" id="lblExportCurrentViewTitle">Current Canvas View</div>
+                  <div class="export-item-sub" id="lblExportCurrentViewSub">Active diagram with reactions & internal forces</div>
+                </div>
+              </button>
+              <div class="export-menu-divider"></div>
+              <button class="export-menu-item" id="btnExportUnsolved">
+                <span class="export-item-icon">🎓</span>
+                <div class="export-item-text">
+                  <div class="export-item-title" id="lblExportUnsolvedTitle">Unsolved Problem (Student Exercise)</div>
+                  <div class="export-item-sub" id="lblExportUnsolvedSub">Clean structure & loads only (for homework/exams)</div>
+                </div>
+              </button>
+            </div>
+          </div>
         </nav>
       </div>
       <div class="user-greeting">

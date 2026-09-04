@@ -274,8 +274,27 @@ export class FrameCalculatorApp {
     document.getElementById('btnOpenTemplates').addEventListener('click', () => this.showHeroOverlay());
     document.getElementById('btnCloseTemplatesModal').addEventListener('click', () => this.closeTemplatesModal());
 
-    // Export PNG
-    document.getElementById('btnExportPNG').addEventListener('click', () => this.exportPNG());
+    // Export PNG Dropdown
+    const btnExportPNG = document.getElementById('btnExportPNG');
+    if (btnExportPNG) {
+      btnExportPNG.addEventListener('click', (e) => this.toggleExportDropdown(e));
+    }
+    const btnExportCurrentView = document.getElementById('btnExportCurrentView');
+    if (btnExportCurrentView) {
+      btnExportCurrentView.addEventListener('click', () => this.exportPNG('current'));
+    }
+    const btnExportUnsolved = document.getElementById('btnExportUnsolved');
+    if (btnExportUnsolved) {
+      btnExportUnsolved.addEventListener('click', () => this.exportPNG('unsolved'));
+    }
+
+    // Close export dropdown on click outside
+    document.addEventListener('click', (e) => {
+      const dropdown = document.querySelector('.export-dropdown-wrapper');
+      if (dropdown && !dropdown.contains(e.target)) {
+        this.closeExportDropdown();
+      }
+    });
 
     // Zoom Buttons
     const btnZoomIn = document.getElementById('btnZoomIn');
@@ -552,8 +571,16 @@ export class FrameCalculatorApp {
     if (this.btnRedo) this.btnRedo.textContent = t.redoBtn;
     if (this.btnSaveModel) this.btnSaveModel.textContent = t.saveModelBtn;
     if (this.btnLoadModel) this.btnLoadModel.textContent = t.loadModelBtn;
-    if (this.btnShareLink) this.btnShareLink.textContent = t.shareBtn;
-    document.getElementById('btnExportPNG').textContent = t.exportPngBtn;
+    const btnExportPNGText = document.getElementById('btnExportPNGText');
+    if (btnExportPNGText) btnExportPNGText.textContent = t.exportPngBtn || '🖼️ Export PNG';
+    const lblExportCurrentViewTitle = document.getElementById('lblExportCurrentViewTitle');
+    if (lblExportCurrentViewTitle) lblExportCurrentViewTitle.textContent = t.exportCurrentViewTitle || 'Current Canvas View';
+    const lblExportCurrentViewSub = document.getElementById('lblExportCurrentViewSub');
+    if (lblExportCurrentViewSub) lblExportCurrentViewSub.textContent = t.exportCurrentViewSub || 'Active diagram with reactions & internal forces';
+    const lblExportUnsolvedTitle = document.getElementById('lblExportUnsolvedTitle');
+    if (lblExportUnsolvedTitle) lblExportUnsolvedTitle.textContent = t.exportUnsolvedTitle || 'Unsolved Problem (Student Exercise)';
+    const lblExportUnsolvedSub = document.getElementById('lblExportUnsolvedSub');
+    if (lblExportUnsolvedSub) lblExportUnsolvedSub.textContent = t.exportUnsolvedSub || 'Clean structure & loads only (for homework/exams)';
     document.getElementById('btnCalcDetailsText').textContent = t.calcReportBtn;
 
     // View radio pills
@@ -1773,12 +1800,51 @@ export class FrameCalculatorApp {
     });
   }
 
-  exportPNG() {
-    const canvas = document.getElementById('frameCanvas');
+  toggleExportDropdown(e) {
+    if (e) e.stopPropagation();
+    const menu = document.getElementById('exportDropdownMenu');
+    const arrow = document.getElementById('exportPngArrow');
+    const btn = document.getElementById('btnExportPNG');
+    if (!menu) return;
+
+    const isHidden = menu.classList.contains('hidden');
+    if (isHidden) {
+      menu.classList.remove('hidden');
+      if (arrow) arrow.textContent = '▴';
+      if (btn) btn.classList.add('active');
+    } else {
+      menu.classList.add('hidden');
+      if (arrow) arrow.textContent = '▾';
+      if (btn) btn.classList.remove('active');
+    }
+  }
+
+  closeExportDropdown() {
+    const menu = document.getElementById('exportDropdownMenu');
+    const arrow = document.getElementById('exportPngArrow');
+    const btn = document.getElementById('btnExportPNG');
+    if (menu && !menu.classList.contains('hidden')) {
+      menu.classList.add('hidden');
+      if (arrow) arrow.textContent = '▾';
+      if (btn) btn.classList.remove('active');
+    }
+  }
+
+  exportPNG(type = 'current') {
+    this.closeExportDropdown();
+    if (!this.renderer) return;
+
+    const dataUrl = this.renderer.exportPNG(type);
     const link = document.createElement('a');
-    link.download = `2D_Frame_${this.frameData.currentView}_diagram.png`;
-    link.href = canvas.toDataURL('image/png');
+    if (type === 'unsolved') {
+      link.download = `2D_Frame_Unsolved_Exercise.png`;
+    } else {
+      const view = this.frameData ? (this.frameData.currentView || 'reactions') : 'diagram';
+      link.download = `2D_Frame_${view}_diagram.png`;
+    }
+    link.href = dataUrl;
     link.click();
+    this.showToast(this.t.toastPngExported || '🖼️ PNG image exported successfully');
   }
 }
 

@@ -955,6 +955,37 @@ export class FrameRenderer {
     }
   }
 
+  exportPNG(type = 'current') {
+    const canvas = this.canvas;
+    if (type === 'unsolved') {
+      const origSolution = this.solution;
+      const origView = this.viewMode;
+      const origDrawNodeMode = this.isDrawNodeMode;
+      const origDrawElemMode = this.isDrawElementMode;
+
+      this.isDrawNodeMode = false;
+      this.isDrawElementMode = false;
+
+      // Render clean structure and loads only without reaction badges or N,T,M diagrams
+      this.ctx.clearRect(0, 0, this.width, this.height);
+      this.drawStructure(1.0, true);
+
+      const dataUrl = canvas.toDataURL('image/png');
+
+      // Restore original state and redraw
+      this.solution = origSolution;
+      this.viewMode = origView;
+      this.isDrawNodeMode = origDrawNodeMode;
+      this.isDrawElementMode = origDrawElemMode;
+      this.draw();
+
+      return dataUrl;
+    } else {
+      this.draw();
+      return canvas.toDataURL('image/png');
+    }
+  }
+
   drawElementModeOverlay() {
     if (!this.frameData || !this.frameData.nodes) return;
     const ctx = this.ctx;
