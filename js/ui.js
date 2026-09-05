@@ -39,12 +39,13 @@ export class FrameCalculatorApp {
     this.applyLanguage();
 
     // Check if model encoded in URL hash (#model=...)
-    const loadedFromHash = this.checkUrlHashModel();
-    if (!loadedFromHash) {
-      this.saveHistoryState();
-      this.recalculate(false);
-      this.showHeroOverlay();
-    }
+    Promise.resolve(this.checkUrlHashModel()).then(loadedFromHash => {
+      if (!loadedFromHash) {
+        this.saveHistoryState();
+        this.recalculate(false);
+        this.showHeroOverlay();
+      }
+    });
 
     // Auto-fold sidebar on portable devices / small screens (<800px)
     if (window.innerWidth <= 800) {
@@ -1725,7 +1726,7 @@ export class FrameCalculatorApp {
     reader.readAsText(file);
   }
 
-  encodeFrameModel(frameData) {
+  async encodeFrameModel(frameData) {
     const compact = {};
     if (frameData.structureType === 'truss') {
       compact.t = 't';
@@ -1734,9 +1735,10 @@ export class FrameCalculatorApp {
       compact.v = frameData.currentView;
     }
 
-    // Nodes: [id, x, z, support]
+    const nodeMap = {};
     if (Array.isArray(frameData.nodes)) {
-      compact.n = frameData.nodes.map(n => {
+      compact.n = frameData.nodes.map((n, i) => {
+        nodeMap[n.id] = i;
         const row = [n.id, n.x, n.z];
         if (n.support && n.support !== 'none') {
           row.push(n.support);
@@ -1745,10 +1747,11 @@ export class FrameCalculatorApp {
       });
     }
 
-    // Elements: [id, nodeI, nodeJ, EJ, hingeI, hingeJ]
     if (Array.isArray(frameData.elements)) {
       compact.e = frameData.elements.map(e => {
-        const row = [e.id, e.nodeI, e.nodeJ];
+        const iIdx = (nodeMap[e.nodeI] !== undefined) ? nodeMap[e.nodeI] : e.nodeI;
+        const jIdx = (nodeMap[e.nodeJ] !== undefined) ? nodeMap[e.nodeJ] : e.nodeJ;
+        const row = [iIdx, jIdx];
         const ej = (e.EJ !== undefined && e.EJ !== null) ? Number(e.EJ) : 1;
         const hi = e.hingeI ? 1 : 0;
         const hj = e.hingeJ ? 1 : 0;
@@ -1761,21 +1764,20 @@ export class FrameCalculatorApp {
       });
     }
 
-    // Nodal loads: [id, nodeId, Fx, Fz, M]
     if (Array.isArray(frameData.nodalLoads) && frameData.nodalLoads.length > 0) {
       compact.nl = frameData.nodalLoads.map(nl => {
-        const row = [nl.id || '', nl.nodeId, nl.Fx || 0, nl.Fz || 0, nl.M || 0];
-        while (row.length > 3 && row[row.length - 1] === 0) {
+        const nIdx = (nodeMap[nl.nodeId] !== undefined) ? nodeMap[nl.nodeId] : nl.nodeId;
+        const row = [nIdx, nl.Fx || 0, nl.Fz || 0, nl.M || 0];
+        while (row.length > 2 && row[row.length - 1] === 0) {
           row.pop();
         }
         return row;
       });
     }
 
-    // Distributed loads: [id, elementId, qx, qz, mode]
     if (Array.isArray(frameData.distLoads) && frameData.distLoads.length > 0) {
-      compact.dl = frameData.distLoads.map(dl => {
-        const row = [dl.id || '', dl.elementId, dl.qx || 0, dl.qz || 0];
+      compact.dl = frameData.distLoads.map((dl) => {
+        const row = [dl.elementId, dl.qx || 0, dl.qz || 0];
         if (dl.mode && dl.mode !== 'proj_z') {
           row.push(dl.mode);
         }
@@ -1783,11 +1785,43 @@ export class FrameCalculatorApp {
       });
     }
 
-    return encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(compact)))));
+    const jsonStr = JSON.stringify(compact);
+
+    if (typeof CompressionStream !== 'undefined') {
+      try {
+        const stream = new Blob([jsonStr]).stream().pipeThrough(new CompressionStream('deflate-raw'));
+        const buffer = await new Response(stream).arrayBuffer();
+        const bytes = new Uint8Array(buffer);
+        let binary = '';
+        for (let i = 0; i < bytes.byteLength; i++) {
+          binary += String.fromCharCode(bytes[i]);
+        }
+        return 'z:' + btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+      } catch (err) {
+        console.warn('CompressionStream fallback:', err);
+      }
+    }
+
+    return encodeURIComponent(btoa(unescape(encodeURIComponent(jsonStr))));
   }
 
-  decodeFrameModel(encodedStr) {
-    const jsonStr = decodeURIComponent(escape(atob(decodeURIComponent(encodedStr))));
+  async decodeFrameModel(encodedStr) {
+    let jsonStr;
+    if (encodedStr.startsWith('z:')) {
+      const b64 = encodedStr.substring(2).replace(/-/g, '+').replace(/_/g, '/');
+      let padded = b64;
+      while (padded.length % 4) padded += '=';
+      const binary = atob(padded);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+      jsonStr = await new Response(stream).text();
+    } else {
+      jsonStr = decodeURIComponent(escape(atob(decodeURIComponent(encodedStr))));
+    }
+
     const obj = JSON.parse(jsonStr);
 
     // Backward compatibility: If old full schema with `nodes` and `elements`
@@ -1806,53 +1840,93 @@ export class FrameCalculatorApp {
         distLoads: []
       };
 
+      const nodeIndexMap = [];
       if (Array.isArray(obj.n)) {
         obj.n.forEach((row, i) => {
-          frame.nodes.push({
-            id: String(row[0] || `N${i + 1}`),
-            x: Number(row[1]) || 0,
-            z: Number(row[2]) || 0,
-            support: row[3] || 'none'
-          });
+          let nid, x, z, sup;
+          if (typeof row[0] === 'string' && (row.length === 3 || row.length === 4)) {
+            nid = row[0];
+            x = Number(row[1]) || 0;
+            z = Number(row[2]) || 0;
+            sup = row[3] || 'none';
+          } else {
+            nid = `N${i + 1}`;
+            x = Number(row[0]) || 0;
+            z = Number(row[1]) || 0;
+            sup = row[2] || 'none';
+          }
+          nodeIndexMap[i] = nid;
+          frame.nodes.push({ id: nid, x, z, support: sup });
         });
       }
 
       if (Array.isArray(obj.e)) {
         obj.e.forEach((row, i) => {
-          const id = String(row[0] || `E${i + 1}`);
-          const nodeI = String(row[1]);
-          const nodeJ = String(row[2]);
-          const EJ = row.length > 3 ? Number(row[3]) : 1.0;
-          const hingeI = row.length > 4 ? Boolean(row[4]) : false;
-          const hingeJ = row.length > 5 ? Boolean(row[5]) : false;
+          let nodeI, nodeJ, EJ, hingeI, hingeJ;
+          if (typeof row[0] === 'string' && typeof row[1] === 'string' && typeof row[2] === 'string') {
+            nodeI = row[1];
+            nodeJ = row[2];
+            EJ = row.length > 3 ? Number(row[3]) : 1.0;
+            hingeI = row.length > 4 ? Boolean(row[4]) : false;
+            hingeJ = row.length > 5 ? Boolean(row[5]) : false;
+          } else {
+            nodeI = typeof row[0] === 'number' ? (nodeIndexMap[row[0]] || `N${row[0] + 1}`) : row[0];
+            nodeJ = typeof row[1] === 'number' ? (nodeIndexMap[row[1]] || `N${row[1] + 1}`) : row[1];
+            EJ = row.length > 2 ? Number(row[2]) : 1.0;
+            hingeI = row.length > 3 ? Boolean(row[3]) : false;
+            hingeJ = row.length > 4 ? Boolean(row[4]) : false;
+          }
+          const id = `E${i + 1}`;
           frame.elements.push({ id, nodeI, nodeJ, EJ, hingeI, hingeJ });
         });
       }
 
       if (Array.isArray(obj.nl)) {
         obj.nl.forEach((row, i) => {
+          let nodeId, Fx, Fz, M;
+          if (typeof row[0] === 'string' && isNaN(Number(row[0])) && row.length >= 4) {
+            nodeId = row[1];
+            Fx = Number(row[2]) || 0;
+            Fz = Number(row[3]) || 0;
+            M = Number(row[4]) || 0;
+          } else {
+            nodeId = typeof row[0] === 'number' ? (nodeIndexMap[row[0]] || `N${row[0] + 1}`) : row[0];
+            Fx = Number(row[1]) || 0;
+            Fz = Number(row[2]) || 0;
+            M = Number(row[3]) || 0;
+          }
           frame.nodalLoads.push({
-            id: String(row[0] || `L_${i + 1}`),
-            nodeId: String(row[1]),
-            Fx: Number(row[2]) || 0,
-            Fz: Number(row[3]) || 0,
-            M: Number(row[4]) || 0
+            id: `L_${i + 1}`,
+            nodeId,
+            Fx,
+            Fz,
+            M
           });
         });
       }
 
       if (Array.isArray(obj.dl)) {
         obj.dl.forEach((row, i) => {
-          const qx = Number(row[2]) || 0;
-          const qz = Number(row[3]) || 0;
+          let elementId, qx, qz, mode;
+          if (row.length >= 4 && isNaN(Number(row[2]))) {
+            elementId = row[1];
+            qx = Number(row[2]) || 0;
+            qz = Number(row[3]) || 0;
+            mode = row[4] || 'proj_z';
+          } else {
+            elementId = row[0];
+            qx = Number(row[1]) || 0;
+            qz = Number(row[2]) || 0;
+            mode = row[3] || 'proj_z';
+          }
           frame.distLoads.push({
-            id: String(row[0] || `D_${i + 1}`),
-            elementId: String(row[1]),
-            qx: qx,
-            qz: qz,
+            id: `D_${i + 1}`,
+            elementId,
+            qx,
+            qz,
             q1: qz,
             q2: qz,
-            mode: row[4] || 'proj_z'
+            mode
           });
         });
       }
@@ -1863,9 +1937,9 @@ export class FrameCalculatorApp {
     return null;
   }
 
-  openShareModal() {
+  async openShareModal() {
     try {
-      const encoded = this.encodeFrameModel(this.frameData);
+      const encoded = await this.encodeFrameModel(this.frameData);
       const shareUrl = `${window.location.origin}${window.location.pathname}#model=${encoded}`;
 
       // Populate input URL
@@ -1957,12 +2031,12 @@ export class FrameCalculatorApp {
     }
   }
 
-  checkUrlHashModel() {
+  async checkUrlHashModel() {
     const hash = window.location.hash;
     if (hash && hash.startsWith('#model=')) {
       try {
         const encoded = hash.substring(7);
-        const data = this.decodeFrameModel(encoded);
+        const data = await this.decodeFrameModel(encoded);
         if (data && Array.isArray(data.nodes) && Array.isArray(data.elements)) {
           this.loadPreset({ data });
           this.hideHeroOverlay();
