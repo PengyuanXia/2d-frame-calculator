@@ -1611,8 +1611,8 @@ input[type=number] {
 
 #shareQrCanvas {
   display: block;
-  width: 140px;
-  height: 140px;
+  width: 190px;
+  height: 190px;
   border-radius: 4px;
 }
 
