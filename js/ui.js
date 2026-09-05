@@ -1725,17 +1725,147 @@ export class FrameCalculatorApp {
     reader.readAsText(file);
   }
 
+  encodeFrameModel(frameData) {
+    const compact = {};
+    if (frameData.structureType === 'truss') {
+      compact.t = 't';
+    }
+    if (frameData.currentView && frameData.currentView !== 'reactions') {
+      compact.v = frameData.currentView;
+    }
+
+    // Nodes: [id, x, z, support]
+    if (Array.isArray(frameData.nodes)) {
+      compact.n = frameData.nodes.map(n => {
+        const row = [n.id, n.x, n.z];
+        if (n.support && n.support !== 'none') {
+          row.push(n.support);
+        }
+        return row;
+      });
+    }
+
+    // Elements: [id, nodeI, nodeJ, EJ, hingeI, hingeJ]
+    if (Array.isArray(frameData.elements)) {
+      compact.e = frameData.elements.map(e => {
+        const row = [e.id, e.nodeI, e.nodeJ];
+        const ej = (e.EJ !== undefined && e.EJ !== null) ? Number(e.EJ) : 1;
+        const hi = e.hingeI ? 1 : 0;
+        const hj = e.hingeJ ? 1 : 0;
+        if (hi || hj) {
+          row.push(ej, hi, hj);
+        } else if (ej !== 1) {
+          row.push(ej);
+        }
+        return row;
+      });
+    }
+
+    // Nodal loads: [id, nodeId, Fx, Fz, M]
+    if (Array.isArray(frameData.nodalLoads) && frameData.nodalLoads.length > 0) {
+      compact.nl = frameData.nodalLoads.map(nl => {
+        const row = [nl.id || '', nl.nodeId, nl.Fx || 0, nl.Fz || 0, nl.M || 0];
+        while (row.length > 3 && row[row.length - 1] === 0) {
+          row.pop();
+        }
+        return row;
+      });
+    }
+
+    // Distributed loads: [id, elementId, qx, qz, mode]
+    if (Array.isArray(frameData.distLoads) && frameData.distLoads.length > 0) {
+      compact.dl = frameData.distLoads.map(dl => {
+        const row = [dl.id || '', dl.elementId, dl.qx || 0, dl.qz || 0];
+        if (dl.mode && dl.mode !== 'proj_z') {
+          row.push(dl.mode);
+        }
+        return row;
+      });
+    }
+
+    return encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(compact)))));
+  }
+
+  decodeFrameModel(encodedStr) {
+    const jsonStr = decodeURIComponent(escape(atob(decodeURIComponent(encodedStr))));
+    const obj = JSON.parse(jsonStr);
+
+    // Backward compatibility: If old full schema with `nodes` and `elements`
+    if (obj && Array.isArray(obj.nodes) && Array.isArray(obj.elements)) {
+      return obj;
+    }
+
+    // Compact schema:
+    if (obj && (Array.isArray(obj.n) || Array.isArray(obj.e))) {
+      const frame = {
+        structureType: obj.t === 't' ? 'truss' : 'frame',
+        currentView: obj.v || 'reactions',
+        nodes: [],
+        elements: [],
+        nodalLoads: [],
+        distLoads: []
+      };
+
+      if (Array.isArray(obj.n)) {
+        obj.n.forEach((row, i) => {
+          frame.nodes.push({
+            id: String(row[0] || `N${i + 1}`),
+            x: Number(row[1]) || 0,
+            z: Number(row[2]) || 0,
+            support: row[3] || 'none'
+          });
+        });
+      }
+
+      if (Array.isArray(obj.e)) {
+        obj.e.forEach((row, i) => {
+          const id = String(row[0] || `E${i + 1}`);
+          const nodeI = String(row[1]);
+          const nodeJ = String(row[2]);
+          const EJ = row.length > 3 ? Number(row[3]) : 1.0;
+          const hingeI = row.length > 4 ? Boolean(row[4]) : false;
+          const hingeJ = row.length > 5 ? Boolean(row[5]) : false;
+          frame.elements.push({ id, nodeI, nodeJ, EJ, hingeI, hingeJ });
+        });
+      }
+
+      if (Array.isArray(obj.nl)) {
+        obj.nl.forEach((row, i) => {
+          frame.nodalLoads.push({
+            id: String(row[0] || `L_${i + 1}`),
+            nodeId: String(row[1]),
+            Fx: Number(row[2]) || 0,
+            Fz: Number(row[3]) || 0,
+            M: Number(row[4]) || 0
+          });
+        });
+      }
+
+      if (Array.isArray(obj.dl)) {
+        obj.dl.forEach((row, i) => {
+          const qx = Number(row[2]) || 0;
+          const qz = Number(row[3]) || 0;
+          frame.distLoads.push({
+            id: String(row[0] || `D_${i + 1}`),
+            elementId: String(row[1]),
+            qx: qx,
+            qz: qz,
+            q1: qz,
+            q2: qz,
+            mode: row[4] || 'proj_z'
+          });
+        });
+      }
+
+      return frame;
+    }
+
+    return null;
+  }
+
   openShareModal() {
     try {
-      const cleanData = {
-        structureType: this.frameData.structureType || 'frame',
-        nodes: this.frameData.nodes,
-        elements: this.frameData.elements,
-        nodalLoads: this.frameData.nodalLoads,
-        distLoads: this.frameData.distLoads,
-        currentView: this.frameData.currentView
-      };
-      const encoded = encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(cleanData)))));
+      const encoded = this.encodeFrameModel(this.frameData);
       const shareUrl = `${window.location.origin}${window.location.pathname}#model=${encoded}`;
 
       // Populate input URL
@@ -1754,13 +1884,13 @@ export class FrameCalculatorApp {
         this.fallbackCopyLink(shareUrl);
       }
 
-      // Generate QR Code
+      // Generate QR Code with Low error correction (level: 'L') for large, ultra-clean, easily scannable modules
       if (this.shareQrCanvas && window.QRious) {
         new window.QRious({
           element: this.shareQrCanvas,
           value: shareUrl,
           size: 380,
-          level: 'M'
+          level: 'L'
         });
       }
 
@@ -1832,8 +1962,7 @@ export class FrameCalculatorApp {
     if (hash && hash.startsWith('#model=')) {
       try {
         const encoded = hash.substring(7);
-        const jsonStr = decodeURIComponent(escape(atob(decodeURIComponent(encoded))));
-        const data = JSON.parse(jsonStr);
+        const data = this.decodeFrameModel(encoded);
         if (data && Array.isArray(data.nodes) && Array.isArray(data.elements)) {
           this.loadPreset({ data });
           this.hideHeroOverlay();
