@@ -44,7 +44,7 @@ export class FrameRenderer {
     this.isAutoSplitNodesEnabled = true;
     this.showNodeLabels = true;
     this.showElemLabels = true;
-    this.showElemLengths = true;
+    this.showElemLengths = false;
 
     this.setupListeners();
   }

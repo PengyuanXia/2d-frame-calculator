@@ -4,12 +4,12 @@
  * Undo / Redo history, modal dialogs, URL share link, JSON save/load, EN/PL i18n.
  */
 
-import { DEFAULT_FRAME, SUPPORT_TYPES } from './constants.js?v=3.1';
-import { FrameSolver } from './frameSolver.js?v=3.1';
-import { FrameRenderer } from './renderer.js?v=3.1';
-import { generateStepByStepReport } from './stepByStep.js?v=3.1';
-import { PRESETS, EMPTY_FRAME_PRESET } from './presets.js?v=3.1';
-import { TRANSLATIONS, getSavedLanguage, setSavedLanguage } from './i18n.js?v=3.1';
+import { DEFAULT_FRAME, SUPPORT_TYPES } from './constants.js?v=3.2';
+import { FrameSolver } from './frameSolver.js?v=3.2';
+import { FrameRenderer } from './renderer.js?v=3.2';
+import { generateStepByStepReport } from './stepByStep.js?v=3.2';
+import { PRESETS, EMPTY_FRAME_PRESET } from './presets.js?v=3.2';
+import { TRANSLATIONS, getSavedLanguage, setSavedLanguage } from './i18n.js?v=3.2';
 
 function formatNum(val, maxDec = 2) {
   if (val === null || val === undefined || isNaN(val)) return '-';
