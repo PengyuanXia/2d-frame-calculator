@@ -44,6 +44,7 @@ export class FrameRenderer {
     this.isAutoSplitNodesEnabled = true;
     this.showNodeLabels = true;
     this.showElemLabels = true;
+    this.showElemLengths = true;
 
     this.setupListeners();
   }
@@ -71,9 +72,15 @@ export class FrameRenderer {
     this.draw();
   }
 
+  setShowElemLengths(show) {
+    this.showElemLengths = !!show;
+    this.draw();
+  }
+
   setShowLabels(show) {
     this.showNodeLabels = !!show;
     this.showElemLabels = !!show;
+    this.showElemLengths = !!show;
     this.draw();
   }
 
@@ -968,7 +975,7 @@ export class FrameRenderer {
 
       // Render clean structure and loads only: NO node labels, NO element labels, NO length info, NO reactions/diagrams
       this.ctx.clearRect(0, 0, this.width, this.height);
-      this.drawStructure(1.0, true, { hideNodeLabels: true, hideElemLabels: true });
+      this.drawStructure(1.0, true, { hideNodeLabels: true, hideElemLabels: true, hideElemLengths: true });
 
       const dataUrl = canvas.toDataURL('image/png');
 
@@ -1472,8 +1479,11 @@ export class FrameRenderer {
       ctx.lineTo(endPx, endPy);
       ctx.stroke();
 
-      // Member ID & Length Tag at Midpoint (only when showElemLabels is true and not hideElemLabels)
-      if (this.showElemLabels && !options.hideElemLabels) {
+      // Member ID & Length Tag at Midpoint
+      const showId = this.showElemLabels && !options.hideElemLabels;
+      const showLen = this.showElemLengths && !options.hideElemLengths && !options.hideLengthLabels;
+
+      if (showId || showLen) {
         const midX = (p1.px + p2.px) / 2;
         const midY = (p1.py + p2.py) / 2;
         const L_world = Math.hypot(nJ.x - nI.x, nJ.z - nI.z);
@@ -1482,7 +1492,14 @@ export class FrameRenderer {
         const tagX = midX + nx * perpDist;
         const tagY = midY + ny * perpDist;
 
-        const tagText = `${elem.id} (${formatNum(L_world)}m)`;
+        let tagText = '';
+        if (showId && showLen) {
+          tagText = `${elem.id} (${formatNum(L_world)}m)`;
+        } else if (showId) {
+          tagText = `${elem.id}`;
+        } else {
+          tagText = `${formatNum(L_world)}m`;
+        }
 
         ctx.save();
         ctx.font = `bold ${11.5 * scale}px 'JetBrains Mono', monospace`;

@@ -152,6 +152,10 @@ export class FrameCalculatorApp {
     this.lblShowElemLabelsText = document.getElementById('lblShowElemLabelsText');
     this.lblToggleElemLabels = document.getElementById('lblToggleElemLabels');
 
+    this.chkShowElemLengths = document.getElementById('chkShowElemLengths');
+    this.lblShowElemLengthsText = document.getElementById('lblShowElemLengthsText');
+    this.lblToggleElemLengths = document.getElementById('lblToggleElemLengths');
+
     // Share & QR Code Modal
     this.modalShare = document.getElementById('modalShare');
     this.btnCloseShareModal = document.getElementById('btnCloseShareModal');
@@ -356,7 +360,18 @@ export class FrameCalculatorApp {
         if (this.renderer) {
           this.renderer.setShowElemLabels(show);
         }
-        this.showToast(show ? (this.t.toastElemLabelsOn || '📏 Member labels: SHOWN') : (this.t.toastElemLabelsOff || '📏 Member labels: HIDDEN'));
+        this.showToast(show ? (this.t.toastElemLabelsOn || '🏷️ Member labels: SHOWN') : (this.t.toastElemLabelsOff || '🏷️ Member labels: HIDDEN'));
+      });
+    }
+
+    // Show/Hide Member Lengths toggle checkbox
+    if (this.chkShowElemLengths) {
+      this.chkShowElemLengths.addEventListener('change', () => {
+        const show = this.chkShowElemLengths.checked;
+        if (this.renderer) {
+          this.renderer.setShowElemLengths(show);
+        }
+        this.showToast(show ? (this.t.toastElemLengthsOn || '📏 Member lengths: SHOWN') : (this.t.toastElemLengthsOff || '📏 Member lengths: HIDDEN'));
       });
     }
 
@@ -697,10 +712,17 @@ export class FrameCalculatorApp {
     }
 
     if (this.lblShowElemLabelsText) {
-      this.lblShowElemLabelsText.textContent = t.showElemLabelsBtn || '📏 Members';
+      this.lblShowElemLabelsText.textContent = t.showElemLabelsBtn || '🏷️ Members';
     }
     if (this.lblToggleElemLabels) {
-      this.lblToggleElemLabels.title = t.showElemLabelsTooltip || 'Toggle Member Labels (E1, Lengths...)';
+      this.lblToggleElemLabels.title = t.showElemLabelsTooltip || 'Toggle Member Labels (E1, E2...)';
+    }
+
+    if (this.lblShowElemLengthsText) {
+      this.lblShowElemLengthsText.textContent = t.showElemLengthsBtn || '📏 Lengths';
+    }
+    if (this.lblToggleElemLengths) {
+      this.lblToggleElemLengths.title = t.showElemLengthsTooltip || 'Toggle Member Lengths (4m, 6m...)';
     }
 
     if (this.lblSidebarHeaderTitle) this.lblSidebarHeaderTitle.textContent = t.sidebarHeaderTitle || 'Model Inputs';
