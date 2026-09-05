@@ -4,12 +4,12 @@
  * Undo / Redo history, modal dialogs, URL share link, JSON save/load, EN/PL i18n.
  */
 
-import { DEFAULT_FRAME, SUPPORT_TYPES } from './constants.js?v=3.0';
-import { FrameSolver } from './frameSolver.js?v=3.0';
-import { FrameRenderer } from './renderer.js?v=3.0';
-import { generateStepByStepReport } from './stepByStep.js?v=3.0';
-import { PRESETS, EMPTY_FRAME_PRESET } from './presets.js?v=3.0';
-import { TRANSLATIONS, getSavedLanguage, setSavedLanguage } from './i18n.js?v=3.0';
+import { DEFAULT_FRAME, SUPPORT_TYPES } from './constants.js?v=3.1';
+import { FrameSolver } from './frameSolver.js?v=3.1';
+import { FrameRenderer } from './renderer.js?v=3.1';
+import { generateStepByStepReport } from './stepByStep.js?v=3.1';
+import { PRESETS, EMPTY_FRAME_PRESET } from './presets.js?v=3.1';
+import { TRANSLATIONS, getSavedLanguage, setSavedLanguage } from './i18n.js?v=3.1';
 
 function formatNum(val, maxDec = 2) {
   if (val === null || val === undefined || isNaN(val)) return '-';
@@ -178,6 +178,17 @@ export class FrameCalculatorApp {
       this.updateStatusBarCursor(cursorValues);
     });
     this.renderer.setLanguage(this.lang);
+
+    // Sync initial label display flags from DOM checkboxes (handles browser soft reload state preservation)
+    if (this.chkShowNodeLabels) {
+      this.renderer.showNodeLabels = this.chkShowNodeLabels.checked;
+    }
+    if (this.chkShowElemLabels) {
+      this.renderer.showElemLabels = this.chkShowElemLabels.checked;
+    }
+    if (this.chkShowElemLengths) {
+      this.renderer.showElemLengths = this.chkShowElemLengths.checked;
+    }
   }
 
   saveHistoryState() {
@@ -344,35 +355,41 @@ export class FrameCalculatorApp {
 
     // Show/Hide Node Labels toggle checkbox
     if (this.chkShowNodeLabels) {
-      this.chkShowNodeLabels.addEventListener('change', () => {
+      const handleNodeLabels = () => {
         const show = this.chkShowNodeLabels.checked;
         if (this.renderer) {
           this.renderer.setShowNodeLabels(show);
         }
         this.showToast(show ? (this.t.toastNodeLabelsOn || '📍 Node labels: SHOWN') : (this.t.toastNodeLabelsOff || '📍 Node labels: HIDDEN'));
-      });
+      };
+      this.chkShowNodeLabels.addEventListener('change', handleNodeLabels);
+      this.chkShowNodeLabels.addEventListener('input', handleNodeLabels);
     }
 
     // Show/Hide Member Labels toggle checkbox
     if (this.chkShowElemLabels) {
-      this.chkShowElemLabels.addEventListener('change', () => {
+      const handleElemLabels = () => {
         const show = this.chkShowElemLabels.checked;
         if (this.renderer) {
           this.renderer.setShowElemLabels(show);
         }
         this.showToast(show ? (this.t.toastElemLabelsOn || '🏷️ Member labels: SHOWN') : (this.t.toastElemLabelsOff || '🏷️ Member labels: HIDDEN'));
-      });
+      };
+      this.chkShowElemLabels.addEventListener('change', handleElemLabels);
+      this.chkShowElemLabels.addEventListener('input', handleElemLabels);
     }
 
     // Show/Hide Member Lengths toggle checkbox
     if (this.chkShowElemLengths) {
-      this.chkShowElemLengths.addEventListener('change', () => {
+      const handleElemLengths = () => {
         const show = this.chkShowElemLengths.checked;
         if (this.renderer) {
           this.renderer.setShowElemLengths(show);
         }
         this.showToast(show ? (this.t.toastElemLengthsOn || '📏 Member lengths: SHOWN') : (this.t.toastElemLengthsOff || '📏 Member lengths: HIDDEN'));
-      });
+      };
+      this.chkShowElemLengths.addEventListener('change', handleElemLengths);
+      this.chkShowElemLengths.addEventListener('input', handleElemLengths);
     }
 
     // Clear Canvas Button (Directs to empty frame preset)

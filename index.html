@@ -317,15 +317,15 @@
           <button class="tool-btn" id="btnZoomOut" title="Zoom Out (-)">🔍 -</button>
           <button class="tool-btn" id="btnResetZoom" title="Reset View (Fit)">⟲ Fit</button>
           <div style="width: 1px; height: 16px; background-color: #cbd5e1; margin: 0 4px; align-self: center;"></div>
-          <label class="tool-toggle-label" id="lblToggleNodeLabels" title="Toggle Node IDs (N1, N2...)">
+          <label class="tool-toggle-label" id="lblToggleNodeLabels" for="chkShowNodeLabels" title="Toggle Node IDs (N1, N2...)">
             <input type="checkbox" id="chkShowNodeLabels" checked>
             <span id="lblShowNodeLabelsText">📍 Nodes</span>
           </label>
-          <label class="tool-toggle-label" id="lblToggleElemLabels" title="Toggle Member Labels (E1, E2...)">
+          <label class="tool-toggle-label" id="lblToggleElemLabels" for="chkShowElemLabels" title="Toggle Member Labels (E1, E2...)">
             <input type="checkbox" id="chkShowElemLabels" checked>
             <span id="lblShowElemLabelsText">🏷️ Members</span>
           </label>
-          <label class="tool-toggle-label" id="lblToggleElemLengths" title="Toggle Member Lengths (4m, 6m...)">
+          <label class="tool-toggle-label" id="lblToggleElemLengths" for="chkShowElemLengths" title="Toggle Member Lengths (4m, 6m...)">
             <input type="checkbox" id="chkShowElemLengths" checked>
             <span id="lblShowElemLengthsText">📏 Lengths</span>
           </label>
@@ -763,6 +763,6 @@
   <div id="toastNotification" class="toast-notification"></div>
 
   <!-- Main Module -->
-  <script type="module" src="js/ui.js?v=3.0"></script>
+  <script type="module" src="js/ui.js?v=3.1"></script>
 </body>
 </html>
