@@ -1889,7 +1889,7 @@ export class FrameCalculatorApp {
         new window.QRious({
           element: this.shareQrCanvas,
           value: shareUrl,
-          size: 380,
+          size: 280,
           level: 'L'
         });
       }
