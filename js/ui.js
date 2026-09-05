@@ -151,6 +151,16 @@ export class FrameCalculatorApp {
     this.lblShowElemLabelsText = document.getElementById('lblShowElemLabelsText');
     this.lblToggleElemLabels = document.getElementById('lblToggleElemLabels');
 
+    // Share & QR Code Modal
+    this.modalShare = document.getElementById('modalShare');
+    this.btnCloseShareModal = document.getElementById('btnCloseShareModal');
+    this.btnCloseShareModalFooter = document.getElementById('btnCloseShareModalFooter');
+    this.shareQrCanvas = document.getElementById('shareQrCanvas');
+    this.btnDownloadQr = document.getElementById('btnDownloadQr');
+    this.inpShareUrl = document.getElementById('inpShareUrl');
+    this.btnCopyShareUrl = document.getElementById('btnCopyShareUrl');
+    this.btnCopyShareUrlText = document.getElementById('btnCopyShareUrlText');
+
     // Make all modals draggable by header
     this.initDraggableModals();
   }
@@ -218,7 +228,7 @@ export class FrameCalculatorApp {
     if (this.btnSaveModel) this.btnSaveModel.addEventListener('click', () => this.saveModelJSON());
     if (this.btnLoadModel) this.btnLoadModel.addEventListener('click', () => this.inpModelFile && this.inpModelFile.click());
     if (this.inpModelFile) this.inpModelFile.addEventListener('change', (e) => this.loadModelJSON(e));
-    if (this.btnShareLink) this.btnShareLink.addEventListener('click', () => this.copyShareLink());
+    if (this.btnShareLink) this.btnShareLink.addEventListener('click', () => this.openShareModal());
 
     // Language switch
     if (this.btnToggleLang) {
@@ -398,6 +408,25 @@ export class FrameCalculatorApp {
       });
     }
 
+    // Share & QR Modal Listeners
+    if (this.btnCloseShareModal) {
+      this.btnCloseShareModal.addEventListener('click', () => this.closeShareModal());
+    }
+    if (this.btnCloseShareModalFooter) {
+      this.btnCloseShareModalFooter.addEventListener('click', () => this.closeShareModal());
+    }
+    if (this.btnCopyShareUrl) {
+      this.btnCopyShareUrl.addEventListener('click', () => this.copyShareUrlToClipboard());
+    }
+    if (this.btnDownloadQr) {
+      this.btnDownloadQr.addEventListener('click', () => this.downloadQrCode());
+    }
+    if (this.modalShare) {
+      this.modalShare.addEventListener('click', (e) => {
+        if (e.target === this.modalShare) this.closeShareModal();
+      });
+    }
+
     // Mode Switcher (Frame vs. Truss) & Educational Help Modal Listeners
     if (this.btnModeFrame) {
       this.btnModeFrame.addEventListener('click', () => this.setStructureType('frame'));
@@ -443,11 +472,15 @@ export class FrameCalculatorApp {
           this.closeContactModal();
         } else if (this.modalTrussHelp && this.modalTrussHelp.classList.contains('open')) {
           this.closeTrussHelpModal();
+        } else if (this.modalShare && this.modalShare.classList.contains('open')) {
+          this.closeShareModal();
         }
         this.closeAddElementModal();
         this.closeCalcDetailsModal();
         this.closeTemplatesModal();
         this.closeContactModal();
+        this.closeTrussHelpModal();
+        this.closeShareModal();
         this.hideHeroOverlay();
       } else if (e.key === 'Enter') {
         if (this.modalAddElement && this.modalAddElement.classList.contains('open')) {
@@ -571,6 +604,7 @@ export class FrameCalculatorApp {
     if (this.btnRedo) this.btnRedo.textContent = t.redoBtn;
     if (this.btnSaveModel) this.btnSaveModel.textContent = t.saveModelBtn;
     if (this.btnLoadModel) this.btnLoadModel.textContent = t.loadModelBtn;
+    if (this.btnShareLink) this.btnShareLink.textContent = t.shareBtn || '🔗 Share';
     const btnExportPNGText = document.getElementById('btnExportPNGText');
     if (btnExportPNGText) btnExportPNGText.textContent = t.exportPngBtn || '🖼️ Export PNG';
     const lblExportCurrentViewTitle = document.getElementById('lblExportCurrentViewTitle');
@@ -696,6 +730,20 @@ export class FrameCalculatorApp {
     if (btnCopyEmailText) btnCopyEmailText.textContent = t.copyBtn || '📋 Copy';
     const btnCloseContactModalFooter = document.getElementById('btnCloseContactModalFooter');
     if (btnCloseContactModalFooter) btnCloseContactModalFooter.textContent = t.closeBtn || 'Close';
+
+    // Share & QR Modal
+    const lblShareModalTitle = document.getElementById('lblShareModalTitle');
+    if (lblShareModalTitle && t.shareModalTitle) lblShareModalTitle.textContent = t.shareModalTitle;
+    const lblShareAutoCopiedText = document.getElementById('lblShareAutoCopiedText');
+    if (lblShareAutoCopiedText && t.shareAutoCopied) lblShareAutoCopiedText.textContent = t.shareAutoCopied;
+    const lblShareHint = document.getElementById('lblShareHint');
+    if (lblShareHint && t.shareHint) lblShareHint.textContent = t.shareHint;
+    const lblDownloadQrText = document.getElementById('lblDownloadQrText');
+    if (lblDownloadQrText && t.downloadQrBtn) lblDownloadQrText.textContent = t.downloadQrBtn;
+    const lblShareUrlLabel = document.getElementById('lblShareUrlLabel');
+    if (lblShareUrlLabel && t.shareUrlLabel) lblShareUrlLabel.textContent = t.shareUrlLabel;
+    if (this.btnCopyShareUrlText && t.copyBtn) this.btnCopyShareUrlText.textContent = t.copyBtn;
+    if (this.btnCloseShareModalFooter && t.closeBtn) this.btnCloseShareModalFooter.textContent = t.closeBtn;
 
     // Mode Switcher and Truss Help Modal Localization
     if (this.lblModeFrameText) this.lblModeFrameText.textContent = t.modeFrameBtn || '🏢 Frame';
@@ -1677,9 +1725,10 @@ export class FrameCalculatorApp {
     reader.readAsText(file);
   }
 
-  copyShareLink() {
+  openShareModal() {
     try {
       const cleanData = {
+        structureType: this.frameData.structureType || 'frame',
         nodes: this.frameData.nodes,
         elements: this.frameData.elements,
         nodalLoads: this.frameData.nodalLoads,
@@ -1688,6 +1737,13 @@ export class FrameCalculatorApp {
       };
       const encoded = encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(cleanData)))));
       const shareUrl = `${window.location.origin}${window.location.pathname}#model=${encoded}`;
+
+      // Populate input URL
+      if (this.inpShareUrl) {
+        this.inpShareUrl.value = shareUrl;
+      }
+
+      // Automatically copy shareable link to clipboard immediately
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(shareUrl).then(() => {
           this.showToast(this.t.toastShareSuccess || '🔗 Link copied to clipboard!');
@@ -1697,9 +1753,63 @@ export class FrameCalculatorApp {
       } else {
         this.fallbackCopyLink(shareUrl);
       }
+
+      // Generate QR Code
+      if (this.shareQrCanvas && window.QRious) {
+        new window.QRious({
+          element: this.shareQrCanvas,
+          value: shareUrl,
+          size: 280,
+          level: 'M'
+        });
+      }
+
+      // Open Modal
+      if (this.modalShare) {
+        this.modalShare.classList.add('open');
+      }
     } catch (err) {
-      console.error('Error creating share link:', err);
-      this.showToast(this.t.toastShareError || '❌ Failed to copy link.');
+      console.error('Error opening share modal:', err);
+      this.showToast(this.t.toastShareError || '❌ Failed to generate share link.');
+    }
+  }
+
+  closeShareModal() {
+    if (this.modalShare) {
+      this.modalShare.classList.remove('open');
+    }
+  }
+
+  copyShareUrlToClipboard() {
+    if (!this.inpShareUrl) return;
+    const url = this.inpShareUrl.value;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(() => {
+        if (this.btnCopyShareUrlText) {
+          this.btnCopyShareUrlText.textContent = this.t.copiedBtn || '✓ Copied!';
+          setTimeout(() => {
+            if (this.btnCopyShareUrlText) this.btnCopyShareUrlText.textContent = this.t.copyBtn || '📋 Copy';
+          }, 2200);
+        }
+        this.showToast(this.t.toastShareSuccess || '🔗 Link copied to clipboard!');
+      }).catch(() => {
+        this.fallbackCopyLink(url);
+      });
+    } else {
+      this.fallbackCopyLink(url);
+    }
+  }
+
+  downloadQrCode() {
+    if (!this.shareQrCanvas) return;
+    try {
+      const link = document.createElement('a');
+      link.download = `2D_Frame_Model_QRCode.png`;
+      link.href = this.shareQrCanvas.toDataURL('image/png');
+      link.click();
+      this.showToast(this.t.toastQrDownloadSuccess || '📱 QR code downloaded as PNG');
+    } catch (err) {
+      console.error('Error downloading QR code:', err);
     }
   }
 
@@ -1737,7 +1847,7 @@ export class FrameCalculatorApp {
   }
 
   initDraggableModals() {
-    const modalIds = ['modalCalcDetails', 'modalTemplates', 'modalAddElement', 'modalContact', 'modalTrussHelp'];
+    const modalIds = ['modalCalcDetails', 'modalTemplates', 'modalAddElement', 'modalContact', 'modalTrussHelp', 'modalShare'];
 
     modalIds.forEach(id => {
       const overlay = document.getElementById(id);

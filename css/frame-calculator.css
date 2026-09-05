@@ -1574,3 +1574,146 @@ input[type=number] {
     font-size: 11px;
   }
 }
+
+/* ==========================================================================
+   Share & QR Code Modal Styles (QR Left, Link Right)
+   ========================================================================== */
+.share-modal-split {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+@media (max-width: 500px) {
+  .share-modal-split {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+.share-col-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.share-qr-wrapper {
+  background: #ffffff;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1.5px solid #cbd5e1;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#shareQrCanvas {
+  display: block;
+  width: 140px;
+  height: 140px;
+  border-radius: 4px;
+}
+
+.share-download-btn {
+  margin-top: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #1e40af;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  padding: 5px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.share-download-btn:hover {
+  background: #dbeafe;
+  border-color: #60a5fa;
+  color: #1d4ed8;
+}
+
+.share-col-right {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.share-auto-copied-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+  padding: 7px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.share-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: #334155;
+  margin-bottom: 6px;
+}
+
+.share-input-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.share-url-input {
+  flex: 1;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-family: monospace;
+  font-size: 11.5px;
+  color: #1e293b;
+  outline: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.share-url-input:focus {
+  border-color: #3b82f6;
+  background: #ffffff;
+}
+
+.share-copy-btn {
+  background: #2563eb;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.15s;
+}
+
+.share-copy-btn:hover {
+  background: #1d4ed8;
+}
+
+.share-hint-text {
+  font-size: 11.5px;
+  color: #64748b;
+  margin-top: 12px;
+  line-height: 1.45;
+}
+

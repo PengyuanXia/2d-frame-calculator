@@ -26,6 +26,14 @@ export const TRANSLATIONS = {
     toastLoadError: '❌ Failed to load file: Invalid JSON format.',
     toastShareSuccess: '🔗 Shareable link copied to clipboard!',
     toastShareError: '❌ Failed to copy link to clipboard.',
+    toastQrDownloadSuccess: '📱 QR code downloaded as PNG',
+
+    // Share & QR Modal
+    shareModalTitle: 'Share Frame Model',
+    shareAutoCopied: 'Link copied to clipboard!',
+    shareHint: 'Scan this QR code with any phone camera or share the link to open this frame calculation instantly.',
+    downloadQrBtn: '📥 Download QR (.png)',
+    shareUrlLabel: 'Direct Shareable Link',
     
     // View modes
     reactionsView: 'Structure & Reactions',
@@ -233,6 +241,14 @@ export const TRANSLATIONS = {
     toastLoadError: '❌ Błąd odczytu pliku: Niepoprawny format JSON.',
     toastShareSuccess: '🔗 Link skopiowany do schowka!',
     toastShareError: '❌ Nie udało się skopiować linku do schowka.',
+    toastQrDownloadSuccess: '📱 Kod QR pobrany jako plik PNG',
+
+    // Share & QR Modal
+    shareModalTitle: 'Udostępnij model ramy',
+    shareAutoCopied: 'Link skopiowany do schowka!',
+    shareHint: 'Zeskanuj kod QR aparatem w telefonie lub udostępnij link, aby natychmiast otworzyć obliczenia ramy.',
+    downloadQrBtn: '📥 Pobierz kod QR (.png)',
+    shareUrlLabel: 'Bezpośredni link do modelu',
     
     // View modes
     reactionsView: 'Schemat i Reakcje',

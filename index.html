@@ -13,6 +13,9 @@
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 
+  <!-- Client-side QR Code Engine -->
+  <script src="js/qrious.min.js"></script>
+
   <!-- Custom Stylesheet -->
   <link rel="stylesheet" href="css/frame-calculator.css">
 </head>
@@ -700,6 +703,54 @@
       </div>
       <div class="modal-footer">
         <button class="btn-primary" id="btnCloseTrussHelpModalFooter">Got it!</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Interactive Share & QR Code Modal -->
+  <div class="modal-overlay" id="modalShare">
+    <div class="modal-content" style="max-width: 540px; padding: 0;">
+      <div class="modal-header" style="padding: 14px 20px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 18px;">🔗</span>
+          <h3 class="font-bold text-slate-800 text-base" id="lblShareModalTitle">Share Frame Model</h3>
+        </div>
+        <button class="btn-icon-del text-lg" id="btnCloseShareModal" title="Close modal">✕</button>
+      </div>
+      <div class="modal-body" style="padding: 20px;">
+        <div class="share-modal-split">
+          <!-- Left: QR Code -->
+          <div class="share-col-left">
+            <div class="share-qr-wrapper">
+              <canvas id="shareQrCanvas" width="140" height="140"></canvas>
+            </div>
+            <button class="share-download-btn" id="btnDownloadQr" title="Download QR Code image">
+              <span id="lblDownloadQrText">📥 Download QR (.png)</span>
+            </button>
+          </div>
+          <!-- Right: Link & Notice -->
+          <div class="share-col-right">
+            <div class="share-auto-copied-badge" id="lblShareAutoCopied">
+              <span style="font-size: 14px; font-weight: 800;">✓</span>
+              <span id="lblShareAutoCopiedText">Link copied to clipboard!</span>
+            </div>
+            <div style="margin-top: 14px;">
+              <label class="share-label" id="lblShareUrlLabel">Direct Shareable Link</label>
+              <div class="share-input-group">
+                <input type="text" id="inpShareUrl" readonly class="share-url-input" spellcheck="false">
+                <button class="share-copy-btn" id="btnCopyShareUrl" title="Copy URL again">
+                  <span id="btnCopyShareUrlText">📋 Copy</span>
+                </button>
+              </div>
+            </div>
+            <p class="share-hint-text" id="lblShareHint">
+              📱 Scan this QR code with any phone camera or share the link to open this frame calculation instantly.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="padding: 12px 20px; display: flex; justify-content: flex-end;">
+        <button class="btn-primary" id="btnCloseShareModalFooter">Close</button>
       </div>
     </div>
   </div>
