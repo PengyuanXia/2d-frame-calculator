@@ -4,12 +4,12 @@
  * Undo / Redo history, modal dialogs, URL share link, JSON save/load, EN/PL i18n.
  */
 
-import { DEFAULT_FRAME, SUPPORT_TYPES } from './constants.js?v=3.2';
-import { FrameSolver } from './frameSolver.js?v=3.2';
-import { FrameRenderer } from './renderer.js?v=3.2';
-import { generateStepByStepReport } from './stepByStep.js?v=3.2';
-import { PRESETS, EMPTY_FRAME_PRESET } from './presets.js?v=3.2';
-import { TRANSLATIONS, getSavedLanguage, setSavedLanguage } from './i18n.js?v=3.2';
+import { DEFAULT_FRAME, SUPPORT_TYPES } from './constants.js?v=3.3';
+import { FrameSolver } from './frameSolver.js?v=3.3';
+import { FrameRenderer } from './renderer.js?v=3.3';
+import { generateStepByStepReport } from './stepByStep.js?v=3.3';
+import { PRESETS, EMPTY_FRAME_PRESET } from './presets.js?v=3.3';
+import { TRANSLATIONS, getSavedLanguage, setSavedLanguage } from './i18n.js?v=3.3';
 
 function formatNum(val, maxDec = 2) {
   if (val === null || val === undefined || isNaN(val)) return '-';
@@ -630,6 +630,9 @@ export class FrameCalculatorApp {
     if (lblKofiText && t.kofiBtn) lblKofiText.textContent = t.kofiBtn;
     if (btnKofi && t.kofiTitle) btnKofi.title = t.kofiTitle;
 
+    const navBackToHub = document.getElementById('navBackToHub');
+    if (navBackToHub && t.backToHub) navBackToHub.textContent = t.backToHub;
+
     document.getElementById('appMainTitle').textContent = t.appTitle;
     document.getElementById('appGreeting').textContent = t.greeting;
     document.getElementById('btnOpenTemplates').textContent = t.presetsBtn;
@@ -746,6 +749,11 @@ export class FrameCalculatorApp {
     if (this.btnToggleSidebarText) this.btnToggleSidebarText.textContent = t.toggleSidebarBtn || 'Panel';
     if (this.btnToggleSidebar) this.btnToggleSidebar.title = t.toggleSidebarTooltip || 'Toggle left inputs panel (hide/show tables)';
     if (this.btnFloatingOpenSidebarText) this.btnFloatingOpenSidebarText.textContent = t.btnFloatingOpenPanel || '📋 Panel';
+
+    const lblBackToHub = document.getElementById('lblBackToHubText');
+    if (lblBackToHub) {
+      lblBackToHub.textContent = t.backToHub || '← Back to Hub';
+    }
 
     const lblContactText = document.getElementById('lblContactText');
     if (lblContactText) lblContactText.textContent = t.contactBtn || 'Contact';

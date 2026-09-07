@@ -53,6 +53,216 @@ html, body {
   overflow: hidden;
 }
 
+/* StructLab Universal Top Bar */
+.structlab-universal-bar {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border-color);
+  padding: 5px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 12px;
+  color: #475569;
+  flex-shrink: 0;
+  height: 31px;
+  min-height: 31px;
+  z-index: 50;
+}
+
+.structlab-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.structlab-logo-link {
+  color: #0f172a;
+  font-weight: 700;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: opacity 0.15s;
+}
+.structlab-logo-link:hover {
+  opacity: 0.85;
+}
+
+.structlab-logo-icon {
+  font-size: 13.5px;
+}
+
+.structlab-logo-tech {
+  color: #4f46e5;
+}
+
+.structlab-bar-divider {
+  color: #cbd5e1;
+  font-size: 12px;
+}
+
+.structlab-nav {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.structlab-nav-link {
+  color: #475569;
+  text-decoration: none;
+  font-size: 12px;
+  transition: color 0.15s;
+  padding: 2px 0;
+}
+.structlab-nav-link.link-beam:hover { color: #4f46e5; }
+.structlab-nav-link.link-frame:hover { color: #0284c7; }
+.structlab-nav-link.link-section:hover { color: #059669; }
+.structlab-nav-link.link-stress:hover { color: #d97706; }
+
+.structlab-nav-link.link-frame.active {
+  color: #0284c7;
+  font-weight: 600;
+  border-bottom: 2px solid #0284c7;
+  padding-bottom: 1px;
+}
+
+.structlab-bar-right {
+  display: flex;
+  align-items: center;
+}
+
+.structlab-hub-link {
+  color: #64748b;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 11.5px;
+  transition: color 0.15s;
+}
+.structlab-hub-link:hover {
+  color: #0f172a;
+}
+
+/* ========================================== */
+/* STRUCTLAB UNIVERSAL TOP BAR                */
+/* ========================================== */
+.structlab-universal-bar {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid #e2e8f0;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 12px;
+  color: #475569;
+  flex-shrink: 0;
+  height: 34px;
+  min-height: 34px;
+  box-sizing: border-box;
+  position: sticky;
+  top: 0;
+  z-index: 9999;
+}
+
+.structlab-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.structlab-logo-link {
+  color: #0f172a;
+  font-weight: 700;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  transition: opacity 0.2s ease;
+}
+
+.structlab-logo-link:hover {
+  opacity: 0.85;
+}
+
+.structlab-logo-icon {
+  font-size: 14px;
+}
+
+.structlab-logo-tech {
+  color: #4f46e5;
+}
+
+.structlab-bar-divider {
+  color: #cbd5e1;
+}
+
+.structlab-nav {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.structlab-nav-link {
+  color: #475569;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  padding: 2px 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.structlab-nav-link.link-beam:hover { color: #4f46e5; }
+.structlab-nav-link.link-frame:hover, .structlab-nav-link.link-frame.active { color: #0284c7; }
+.structlab-nav-link.link-section:hover { color: #059669; }
+.structlab-nav-link.link-stress:hover { color: #d97706; }
+
+.structlab-nav-link.active {
+  font-weight: 600;
+  border-bottom: 2px solid #0284c7;
+  padding-bottom: 1px;
+}
+
+.structlab-bar-right {
+  display: flex;
+  align-items: center;
+}
+
+.structlab-hub-link {
+  color: #64748b;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.structlab-hub-link:hover {
+  color: #0f172a;
+}
+
+@media (max-width: 640px) {
+  .structlab-universal-bar {
+    padding: 0 8px;
+    font-size: 11px;
+  }
+  .structlab-nav {
+    gap: 8px;
+  }
+  .structlab-nav-link {
+    font-size: 11px;
+  }
+}
+
 /* Window Title Bar */
 .window-title-bar {
   background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
@@ -443,7 +653,7 @@ html, body {
   display: flex;
   flex: 1 1 0%;
   min-height: 0;
-  height: calc(100vh - 40px - 52px - 32px);
+  height: calc(100vh - 31px - 40px - 52px - 32px);
   overflow: hidden;
   position: relative;
 }
@@ -1715,5 +1925,11 @@ input[type=number] {
   color: #64748b;
   margin-top: 12px;
   line-height: 1.45;
+}
+
+@media print {
+  #structlab-universal-bar {
+    display: none !important;
+  }
 }
 

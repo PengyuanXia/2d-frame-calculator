@@ -32,6 +32,32 @@
 <body>
   <div class="app-container">
     
+    <!-- ========================================== -->
+    <!-- 0. STRUCTLAB UNIVERSAL TOP BAR             -->
+    <!-- ========================================== -->
+    <div id="structlab-universal-bar" class="structlab-universal-bar">
+      <div class="structlab-bar-left">
+        <a href="https://structlab.tech" class="structlab-logo-link" title="StructLab Home">
+          <span class="structlab-logo-icon">🏛️</span> StructLab<span class="structlab-logo-tech">.tech</span>
+        </a>
+        <span class="structlab-bar-divider">|</span>
+        <nav class="structlab-nav">
+          <a href="https://beam.structlab.tech" class="structlab-nav-link link-beam" title="Beam Calculator">📐 Beam</a>
+          <a href="https://frame.structlab.tech" class="structlab-nav-link link-frame active" title="2D Frame Calculator">🏛️ Frame</a>
+          <a href="https://section.structlab.tech" class="structlab-nav-link link-section" title="Section Properties Calculator">📏 Section</a>
+          <a href="https://stress.structlab.tech" class="structlab-nav-link link-stress" title="Beam Stress Calculator">🔬 Stress</a>
+        </nav>
+      </div>
+      <div class="structlab-bar-right">
+        <a href="https://structlab.tech" class="structlab-hub-link" id="linkBackToHub" title="Back to StructLab Portal">
+          <span id="lblBackToHubText">← Back to Hub</span>
+          <svg style="width: 10px; height: 10px; opacity: 0.7; margin-left: 2px;" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M5.22 14.78a.75.75 0 001.06 0l7.22-7.22v5.69a.75.75 0 001.5 0v-7.5a.75.75 0 00-.75-.75h-7.5a.75.75 0 000 1.5h5.69l-7.22 7.22a.75.75 0 000 1.06z" clip-rule="evenodd"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+
     <!-- 1. Window Title Bar -->
     <header class="window-title-bar">
       <div class="flex items-center gap-3">
@@ -773,6 +799,6 @@
   <div id="toastNotification" class="toast-notification"></div>
 
   <!-- Main Module -->
-  <script type="module" src="js/ui.js?v=3.2"></script>
+  <script type="module" src="js/ui.js?v=3.3"></script>
 </body>
 </html>
