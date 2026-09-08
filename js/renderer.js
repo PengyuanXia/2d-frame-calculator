@@ -1808,7 +1808,7 @@ export class FrameRenderer {
         const toX = isRight ? p.px + arrowLen : p.px - arrowLen;
         this.drawArrow(ctx, fromX, p.py, toX, p.py, '#dc2626', headSize, arrowLineWidth);
 
-        this.drawBadgeText(ctx, isRight ? toX + 6 : toX - 6, p.py, `Fx=${formatNum(Math.abs(fx))}kN`, '#dc2626', isRight ? 'left' : 'right', '#fca5a5');
+        this.drawBadgeText(ctx, isRight ? toX + 8 : toX - 8, p.py, `Fx = ${formatNum(Math.abs(fx))} kN`, '#dc2626', isRight ? 'left' : 'right', '#fca5a5', 14);
       }
 
       // Vertical Force Fz (tail at node, points outward: down if fz > 0, up if fz < 0)
@@ -1818,7 +1818,7 @@ export class FrameRenderer {
         const toY = isDownward ? p.py + arrowLen : p.py - arrowLen;
         this.drawArrow(ctx, p.px, fromY, p.px, toY, '#dc2626', headSize, arrowLineWidth);
 
-        this.drawBadgeText(ctx, p.px, isDownward ? toY + 14 * scale : toY - 14 * scale, `Fz=${formatNum(Math.abs(fz))}kN`, '#dc2626', 'center', '#fca5a5');
+        this.drawBadgeText(ctx, p.px, isDownward ? toY + 16 * scale : toY - 16 * scale, `Fz = ${formatNum(Math.abs(fz))} kN`, '#dc2626', 'center', '#fca5a5', 14);
       }
 
       // Moment M (counter-clockwise arc if > 0, clockwise if < 0)
@@ -1827,7 +1827,7 @@ export class FrameRenderer {
         const isClockwise = m < 0; // Positive is counter-clockwise
         this.drawMomentArc(ctx, p.px, p.py, radius, isClockwise, '#d97706', scale);
 
-        this.drawBadgeText(ctx, p.px, p.py - radius - 10 * scale, `M=${formatNum(Math.abs(m))}kNm`, '#d97706', 'center', '#fcd34d');
+        this.drawBadgeText(ctx, p.px, p.py - radius - 12 * scale, `M = ${formatNum(Math.abs(m))} kNm`, '#d97706', 'center', '#fcd34d', 14);
       }
 
       ctx.restore();
@@ -1854,7 +1854,7 @@ export class FrameRenderer {
       if (Math.abs(qx) < 1e-4 && Math.abs(qz) < 1e-4) return;
 
       ctx.save();
-      const loadH = 24 * scale;
+      const loadH = 26 * scale;
       const isInclined = Math.abs(p1.px - p2.px) > 3 && Math.abs(p1.py - p2.py) > 3;
 
       // 1. Vertical distributed load qz (Projected onto horizontal span, >0 downwards)
@@ -1900,10 +1900,27 @@ export class FrameRenderer {
           }
         }
 
+        // Distinct pill badge with enlarged font for qz
+        const qzText = `qz = ${formatNum(Math.abs(qz))} kN/m`;
+        const fontSize = Math.max(12, 14 * scale);
+        ctx.font = `bold ${fontSize}px 'JetBrains Mono', monospace`;
+        const metrics = ctx.measureText(qzText);
+        const padX = 6 * scale;
+        const boxW = metrics.width + padX * 2;
+        const boxH = fontSize + 7 * scale;
+        const tagX = (minPx + maxPx) / 2;
+        const tagY = Math.min(topY, baseY) - (boxH / 2 + 3 * scale);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(tagX - boxW / 2, tagY - boxH / 2, boxW, boxH);
+        ctx.strokeStyle = '#fca5a5';
+        ctx.lineWidth = 1.2 * scale;
+        ctx.strokeRect(tagX - boxW / 2, tagY - boxH / 2, boxW, boxH);
+
         ctx.fillStyle = '#b91c1c';
-        ctx.font = `bold ${11.5 * scale}px 'JetBrains Mono', monospace`;
         ctx.textAlign = 'center';
-        ctx.fillText(`qz = ${formatNum(Math.abs(qz))} kN/m`, (minPx + maxPx) / 2, Math.min(topY, baseY) - 5 * scale);
+        ctx.textBaseline = 'middle';
+        ctx.fillText(qzText, tagX, tagY);
       }
 
       // 2. Horizontal distributed load qx (Projected onto vertical height)
@@ -1941,14 +1958,31 @@ export class FrameRenderer {
         // Draw horizontal load arrows
         for (let i = 0; i <= numArrows; i++) {
           const curY = minPy + (i / numArrows) * spanPy;
-          const arrowBaseX = isInclined ? baseX : p1.px + ((curY - p1.py) / (p2.py - p1.py || 1)) * (p2.px - p1.px);
+          const arrowBaseX = isInclined ? baseX : p1.px + ((curY - p1.py) / (p2.py - p1.py || 1)) * (p2.py - p1.py);
           this.drawArrow(ctx, outerX, curY, arrowBaseX - sign * 2, curY, '#ef4444', 4.5 * scale, 1.6 * scale);
         }
 
+        // Distinct pill badge with enlarged font for qx
+        const qxText = `qx = ${formatNum(Math.abs(qx))} kN/m`;
+        const fontSize = Math.max(12, 14 * scale);
+        ctx.font = `bold ${fontSize}px 'JetBrains Mono', monospace`;
+        const metrics = ctx.measureText(qxText);
+        const padX = 6 * scale;
+        const boxW = metrics.width + padX * 2;
+        const boxH = fontSize + 7 * scale;
+        const tagX = (outerX + baseX) / 2;
+        const tagY = minPy - (boxH / 2 + 3 * scale);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(tagX - boxW / 2, tagY - boxH / 2, boxW, boxH);
+        ctx.strokeStyle = '#fca5a5';
+        ctx.lineWidth = 1.2 * scale;
+        ctx.strokeRect(tagX - boxW / 2, tagY - boxH / 2, boxW, boxH);
+
         ctx.fillStyle = '#b91c1c';
-        ctx.font = `bold ${11.5 * scale}px 'JetBrains Mono', monospace`;
         ctx.textAlign = 'center';
-        ctx.fillText(`qx = ${formatNum(Math.abs(qx))} kN/m`, (outerX + baseX) / 2, minPy - 5 * scale);
+        ctx.textBaseline = 'middle';
+        ctx.fillText(qxText, tagX, tagY);
       }
 
       ctx.restore();
@@ -1972,17 +2006,17 @@ export class FrameRenderer {
       const p = this.worldToPixel(node.x, node.z);
       const px = p.px;
       const py = p.py;
-      const arrowLen = 38;
-      const supportH = 22; // Offset below support symbol
+      const arrowLen = 42;
+      const supportH = 24; // Offset below support symbol
 
       // 1. Horizontal Reaction Rx
       if (Math.abs(r.Rx) > 1e-3) {
         const isRight = r.Rx > 0;
         const fromX = isRight ? px - 18 - arrowLen : px + 18 + arrowLen;
         const toX = isRight ? px - 12 : px + 12;
-        this.drawArrow(ctx, fromX, py + 8, toX, py + 8, '#16a34a', 7.5, 2.5);
+        this.drawArrow(ctx, fromX, py + 8, toX, py + 8, '#16a34a', 8.0, 2.6);
 
-        this.drawBadgeText(ctx, isRight ? fromX - 6 : fromX + 6, py + 8, `Rx=${formatNum(Math.abs(r.Rx))}kN`, '#15803d', isRight ? 'right' : 'left');
+        this.drawBadgeText(ctx, isRight ? fromX - 8 : fromX + 8, py + 8, `Rx = ${formatNum(Math.abs(r.Rx))} kN`, '#15803d', isRight ? 'right' : 'left', '#86efac', 14);
       }
 
       // 2. Vertical Reaction Rz (placed cleanly BELOW support to avoid crossing column)
@@ -1991,47 +2025,54 @@ export class FrameRenderer {
         const baseOffsetY = py + supportH;
         const fromY = isUpward ? baseOffsetY + arrowLen : baseOffsetY;
         const toY = isUpward ? baseOffsetY : baseOffsetY + arrowLen;
-        this.drawArrow(ctx, px, fromY, px, toY, '#16a34a', 7.5, 2.5);
+        this.drawArrow(ctx, px, fromY, px, toY, '#16a34a', 8.0, 2.6);
 
-        this.drawBadgeText(ctx, px, baseOffsetY + arrowLen + 12, `Rz=${formatNum(Math.abs(r.Rz))}kN`, '#15803d', 'center');
+        this.drawBadgeText(ctx, px, baseOffsetY + arrowLen + 14, `Rz = ${formatNum(Math.abs(r.Rz))} kN`, '#15803d', 'center', '#86efac', 14);
       }
 
       // 3. Reaction Moment MR (counter-clockwise arc if > 0, clockwise if < 0)
       if (Math.abs(r.MR) > 1e-3) {
-        const radius = 22;
+        const radius = 24;
         const isClockwise = r.MR < 0; // Positive is counter-clockwise
         this.drawMomentArc(ctx, px, py + 12, radius, isClockwise, '#047857', 1.0);
 
-        const textX = px - radius - 14;
+        const textX = px - radius - 16;
         const textY = py + supportH + 12;
-        this.drawBadgeText(ctx, textX, textY, `MR=${formatNum(Math.abs(r.MR))}kNm`, '#047857', 'right');
+        this.drawBadgeText(ctx, textX, textY, `MR = ${formatNum(Math.abs(r.MR))} kNm`, '#047857', 'right', '#86efac', 14);
       }
     }
 
     ctx.restore();
   }
 
-  drawBadgeText(ctx, px, py, text, color, align = 'center', borderColor = '#86efac') {
+  drawBadgeText(ctx, px, py, text, color, align = 'center', borderColor = '#86efac', fontSize = 14) {
     ctx.save();
-    ctx.font = 'bold 11.5px "JetBrains Mono", monospace';
+    ctx.font = `bold ${fontSize}px "JetBrains Mono", monospace`;
     const metrics = ctx.measureText(text);
-    const boxW = metrics.width + 8;
-    const boxH = 17;
+    const padX = 7;
+    const boxW = metrics.width + padX * 2;
+    const boxH = fontSize + 8;
 
     let boxX = px - boxW / 2;
-    if (align === 'right') boxX = px - boxW;
-    else if (align === 'left') boxX = px;
+    let textX = px;
+    if (align === 'right') {
+      boxX = px - boxW;
+      textX = px - padX;
+    } else if (align === 'left') {
+      boxX = px;
+      textX = px + padX;
+    }
 
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(boxX, py - boxH / 2, boxW, boxH);
     ctx.strokeStyle = borderColor;
-    ctx.lineWidth = 1.2;
+    ctx.lineWidth = 1.3;
     ctx.strokeRect(boxX, py - boxH / 2, boxW, boxH);
 
     ctx.fillStyle = color;
     ctx.textAlign = align;
     ctx.textBaseline = 'middle';
-    ctx.fillText(text, px, py);
+    ctx.fillText(text, textX, py);
     ctx.restore();
   }
 
