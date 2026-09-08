@@ -1605,7 +1605,15 @@ export class FrameCalculatorApp {
   /* ---------------- Other Modals ---------------- */
 
   openCalcDetailsModal() {
-    const reportHtml = generateStepByStepReport(this.frameData, this.solution, this.lang);
+    let unsolvedImg = null;
+    try {
+      if (this.renderer) {
+        unsolvedImg = this.renderer.exportPNG('unsolved');
+      }
+    } catch (e) {
+      console.warn('Could not generate unsolved picture for report:', e);
+    }
+    const reportHtml = generateStepByStepReport(this.frameData, this.solution, this.lang, { unsolvedImg });
     this.modalCalcBody.innerHTML = reportHtml;
     this.modalCalcDetails.classList.add('open');
 

@@ -12,8 +12,9 @@ function formatNum(val, maxDec = 2) {
   return num.toFixed(maxDec);
 }
 
-export function generateStepByStepReport(frameData, solution, lang = 'en') {
+export function generateStepByStepReport(frameData, solution, lang = 'en', options = {}) {
   const t = TRANSLATIONS[lang] || TRANSLATIONS.en;
+  const unsolvedImg = options && options.unsolvedImg ? options.unsolvedImg : null;
 
   if (!solution || !solution.isStable) {
     return `
@@ -29,6 +30,24 @@ export function generateStepByStepReport(frameData, solution, lang = 'en') {
   const elements = solution.elements || [];
   const reactions = solution.reactions || {};
   const det = solution.determinacy;
+
+  // 0. Unsolved Structural Scheme (Analytical Model) Card
+  const unsolvedImgCard = unsolvedImg ? `
+    <div class="mb-4 bg-white border border-slate-200 rounded-lg p-3 text-center shadow-xs">
+      <div class="flex items-center justify-between text-xs text-slate-500 mb-2 px-1">
+        <span class="font-bold text-slate-800 font-sans text-[12px] flex items-center gap-1.5">
+          <span>📐</span> ${lang === 'pl' ? 'Schemat Statyczny Układu' : 'Structural Scheme (Analytical Model)'}
+        </span>
+        <span class="text-[11px] font-sans text-slate-400">${lang === 'pl' ? 'Geometria, podpory i obciążenia' : 'Geometry, Supports & Loads'}</span>
+      </div>
+      <div class="flex justify-center items-center bg-slate-50/60 rounded border border-slate-100 p-2 overflow-hidden">
+        <img src="${unsolvedImg}" alt="Structural Scheme" class="max-h-60 sm:max-h-72 w-auto object-contain rounded" style="max-height: 260px;" />
+      </div>
+      <div class="text-[11px] text-slate-400 mt-1.5 font-sans">
+        ${lang === 'pl' ? 'Rys. 1: Schemat statyczny układu (przed rozwiązaniem)' : 'Fig. 1: Structural system scheme (unsolved model)'}
+      </div>
+    </div>
+  ` : '';
 
   // 1. Structural Determinacy Section
   let detBadge = '';
@@ -122,6 +141,7 @@ export function generateStepByStepReport(frameData, solution, lang = 'en') {
           <h4 class="font-bold text-sm text-slate-900 border-b border-slate-200 pb-2 mb-3">
             ${lang === 'pl' ? '1. Geometria Kratownicy i Wyznaczalność Statyczna' : '1. Truss Geometry & Static Determinacy'}
           </h4>
+          ${unsolvedImgCard}
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs mb-3">
             <div>
               <span class="text-slate-500 block">${t.nodesCountLabel || 'Nodes (k)'}</span>
@@ -219,6 +239,7 @@ export function generateStepByStepReport(frameData, solution, lang = 'en') {
         <h4 class="font-bold text-sm text-slate-900 border-b border-slate-200 pb-2 mb-3">
           ${t.section1Title}
         </h4>
+        ${unsolvedImgCard}
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
           <div>
             <span class="text-slate-500 block">${t.nodesCountLabel}</span>

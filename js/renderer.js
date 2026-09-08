@@ -962,6 +962,40 @@ export class FrameRenderer {
     }
   }
 
+  cropCanvas(sourceCanvas, padding = 24) {
+    const ctx = sourceCanvas.getContext('2d');
+    const w = sourceCanvas.width;
+    const h = sourceCanvas.height;
+    const imgData = ctx.getImageData(0, 0, w, h);
+    const d = imgData.data;
+    let minX = w, minY = h, maxX = 0, maxY = 0;
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const alpha = d[(y * w + x) * 4 + 3];
+        if (alpha > 15) {
+          if (x < minX) minX = x;
+          if (x > maxX) maxX = x;
+          if (y < minY) minY = y;
+          if (y > maxY) maxY = y;
+        }
+      }
+    }
+    if (minX > maxX || minY > maxY) return sourceCanvas.toDataURL('image/png');
+    const cropX = Math.max(0, minX - padding);
+    const cropY = Math.max(0, minY - padding);
+    const cropW = Math.min(w - cropX, (maxX - minX + 1) + padding * 2);
+    const cropH = Math.min(h - cropY, (maxY - minY + 1) + padding * 2);
+
+    const off = document.createElement('canvas');
+    off.width = cropW;
+    off.height = cropH;
+    const oCtx = off.getContext('2d');
+    oCtx.fillStyle = '#ffffff';
+    oCtx.fillRect(0, 0, cropW, cropH);
+    oCtx.drawImage(sourceCanvas, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+    return off.toDataURL('image/png');
+  }
+
   exportPNG(type = 'current') {
     const canvas = this.canvas;
     if (type === 'unsolved') {
@@ -969,21 +1003,30 @@ export class FrameRenderer {
       const origView = this.viewMode;
       const origDrawNodeMode = this.isDrawNodeMode;
       const origDrawElemMode = this.isDrawElementMode;
+      const origZoom = this.zoomFactor;
+      const origPanX = this.panX;
+      const origPanY = this.panY;
 
       this.isDrawNodeMode = false;
       this.isDrawElementMode = false;
+      this.zoomFactor = 1.0;
+      this.panX = 0;
+      this.panY = 0;
 
       // Render clean structure and loads only: NO node labels, NO element labels, NO length info, NO reactions/diagrams
       this.ctx.clearRect(0, 0, this.width, this.height);
       this.drawStructure(1.0, true, { hideNodeLabels: true, hideElemLabels: true, hideElemLengths: true });
 
-      const dataUrl = canvas.toDataURL('image/png');
+      const dataUrl = this.cropCanvas(canvas, 24);
 
       // Restore original state and redraw
       this.solution = origSolution;
       this.viewMode = origView;
       this.isDrawNodeMode = origDrawNodeMode;
       this.isDrawElementMode = origDrawElemMode;
+      this.zoomFactor = origZoom;
+      this.panX = origPanX;
+      this.panY = origPanY;
       this.draw();
 
       return dataUrl;

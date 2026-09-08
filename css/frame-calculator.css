@@ -1743,6 +1743,14 @@ input[type=number] {
     max-height: none !important;
     padding: 0 !important;
   }
+  .modal-overlay#modalCalcDetails img {
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: 240px !important;
+    object-fit: contain !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
   .poly-card, div {
     break-inside: avoid;
   }
