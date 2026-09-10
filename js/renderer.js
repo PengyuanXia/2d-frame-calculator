@@ -717,7 +717,7 @@ export class FrameRenderer {
     this.draw();
   }
 
-  updateTransform(forceAutoFit = false) {
+  updateTransform(forceAutoFit = false, fitRatio = 0.78) {
     if (!this.width || !this.height) this.resize();
 
     // In any Draw Mode, keep the current scale and viewport completely stable
@@ -756,8 +756,8 @@ export class FrameRenderer {
     const availW = Math.max(50, this.width - this.padding.left - this.padding.right);
     const availH = Math.max(50, this.height - this.padding.top - this.padding.bottom);
 
-    // Calculate fit scale so structure comfortably fills ~78% of canvas with breathing room for annotations
-    let fitScale = Math.min(availW / spanX, availH / spanZ) * 0.78;
+    // Calculate fit scale with configurable fitRatio (default 0.78, lower during export for extra annotation margin)
+    let fitScale = Math.min(availW / spanX, availH / spanZ) * fitRatio;
 
     // Cap scale between reasonable bounds: at least 15 px/m for massive frames, at most 260 px/m for compact 1m frames
     const scale = Math.max(15, Math.min(fitScale, 260));
@@ -1016,17 +1016,19 @@ export class FrameRenderer {
       this.panX = 0;
       this.panY = 0;
 
-      this.updateTransform();
+      this.updateTransform(true, 0.54);
       this.ctx.clearRect(0, 0, this.width, this.height);
+
+      const exportScale = 1.75;
 
       if (type === 'unsolved') {
         // Render clean structure and loads only: NO node labels, NO element labels, NO length info, NO reactions/diagrams
-        this.drawStructure(1.0, true, { hideNodeLabels: true, hideElemLabels: true, hideElemLengths: true });
+        this.drawStructure(exportScale, true, { hideNodeLabels: true, hideElemLabels: true, hideElemLengths: true });
       } else {
         if (!this.solution || !this.solution.isStable) {
-          this.drawStructure(1.0, true);
+          this.drawStructure(exportScale, true);
         } else {
-          this.drawSingleDiagramView(type);
+          this.drawSingleDiagramView(type, exportScale);
         }
       }
 
@@ -1429,25 +1431,25 @@ export class FrameRenderer {
     ctx.restore();
   }
 
-  drawSingleDiagramView(mode) {
+  drawSingleDiagramView(mode, scale = 1.0) {
     const ctx = this.ctx;
 
     // 1. Draw Diagrams or Reactions first (underneath structure loads and badges)
     let diagramTags = [];
     if (mode === 'reactions') {
-      this.drawReactions();
+      this.drawReactions(scale);
     } else if (mode === 'normal') {
-      diagramTags = this.drawInternalForceDiagram('N', '#2563eb', 'rgba(37, 99, 235, 0.22)', this.t.normalDiagramTitle);
+      diagramTags = this.drawInternalForceDiagram('N', '#2563eb', 'rgba(37, 99, 235, 0.22)', this.t.normalDiagramTitle, scale);
     } else if (mode === 'shear') {
-      diagramTags = this.drawInternalForceDiagram('T', '#dc2626', 'rgba(220, 38, 38, 0.22)', this.t.shearDiagramTitle);
+      diagramTags = this.drawInternalForceDiagram('T', '#dc2626', 'rgba(220, 38, 38, 0.22)', this.t.shearDiagramTitle, scale);
     } else if (mode === 'moment') {
-      diagramTags = this.drawInternalForceDiagram('M', '#059669', 'rgba(5, 150, 105, 0.25)', this.t.momentDiagramTitle);
+      diagramTags = this.drawInternalForceDiagram('M', '#059669', 'rgba(5, 150, 105, 0.25)', this.t.momentDiagramTitle, scale);
     }
 
     // 2. Draw Structure Members, Supports, Hinges, Distributed Loads, and Nodal Loads
     // Rule: Hide external loads in N, T, M diagram views to avoid clutter; show them only in 'reactions' (Structure & Reactions) mode.
     const showLoads = (mode === 'reactions');
-    this.drawStructure(1.0, showLoads);
+    this.drawStructure(scale, showLoads);
 
     // If Truss Mode and viewing Shear or Moment, draw educational zero-state banner
     if (this.frameData && this.frameData.structureType === 'truss' && (mode === 'shear' || mode === 'moment')) {
@@ -1457,7 +1459,7 @@ export class FrameRenderer {
     // 3. Draw Diagram Value Badges on the absolute TOP layer so they are NEVER shaded or cut through by any beam/arrow!
     if (diagramTags && diagramTags.length) {
       diagramTags.forEach(tag => {
-        this.renderDiagramTag(ctx, tag);
+        this.renderDiagramTag(ctx, tag, scale);
       });
     }
   }
@@ -1821,7 +1823,7 @@ export class FrameRenderer {
         const toX = isRight ? p.px + arrowLen : p.px - arrowLen;
         this.drawArrow(ctx, fromX, p.py, toX, p.py, '#dc2626', headSize, arrowLineWidth);
 
-        this.drawBadgeText(ctx, isRight ? toX + 8 : toX - 8, p.py, `Fx = ${formatNum(Math.abs(fx))} kN`, '#dc2626', isRight ? 'left' : 'right', '#fca5a5', 14);
+        this.drawBadgeText(ctx, isRight ? toX + 8 * scale : toX - 8 * scale, p.py, `Fx = ${formatNum(Math.abs(fx))} kN`, '#dc2626', isRight ? 'left' : 'right', '#fca5a5', 14, scale);
       }
 
       // Vertical Force Fz (tail at node, points outward: down if fz > 0, up if fz < 0)
@@ -1831,7 +1833,7 @@ export class FrameRenderer {
         const toY = isDownward ? p.py + arrowLen : p.py - arrowLen;
         this.drawArrow(ctx, p.px, fromY, p.px, toY, '#dc2626', headSize, arrowLineWidth);
 
-        this.drawBadgeText(ctx, p.px, isDownward ? toY + 16 * scale : toY - 16 * scale, `Fz = ${formatNum(Math.abs(fz))} kN`, '#dc2626', 'center', '#fca5a5', 14);
+        this.drawBadgeText(ctx, p.px, isDownward ? toY + 16 * scale : toY - 16 * scale, `Fz = ${formatNum(Math.abs(fz))} kN`, '#dc2626', 'center', '#fca5a5', 14, scale);
       }
 
       // Moment M (counter-clockwise arc if > 0, clockwise if < 0)
@@ -1840,7 +1842,7 @@ export class FrameRenderer {
         const isClockwise = m < 0; // Positive is counter-clockwise
         this.drawMomentArc(ctx, p.px, p.py, radius, isClockwise, '#d97706', scale);
 
-        this.drawBadgeText(ctx, p.px, p.py - radius - 12 * scale, `M = ${formatNum(Math.abs(m))} kNm`, '#d97706', 'center', '#fcd34d', 14);
+        this.drawBadgeText(ctx, p.px, p.py - radius - 12 * scale, `M = ${formatNum(Math.abs(m))} kNm`, '#d97706', 'center', '#fcd34d', 14, scale);
       }
 
       ctx.restore();
@@ -2002,7 +2004,7 @@ export class FrameRenderer {
     });
   }
 
-  drawReactions() {
+  drawReactions(scale = 1.0) {
     const ctx = this.ctx;
     if (!this.solution || !this.solution.reactions) return;
 
@@ -2012,6 +2014,10 @@ export class FrameRenderer {
 
     ctx.save();
 
+    const arrowLen = Math.round(44 * scale);
+    const supportH = Math.round(24 * scale); // Offset below support symbol
+    const badgeFontSize = Math.round(14 * scale);
+
     for (const [nodeId, r] of Object.entries(reactions)) {
       const node = nodeMap.get(nodeId);
       if (!node) continue;
@@ -2019,17 +2025,17 @@ export class FrameRenderer {
       const p = this.worldToPixel(node.x, node.z);
       const px = p.px;
       const py = p.py;
-      const arrowLen = 42;
-      const supportH = 24; // Offset below support symbol
 
       // 1. Horizontal Reaction Rx
       if (Math.abs(r.Rx) > 1e-3) {
         const isRight = r.Rx > 0;
-        const fromX = isRight ? px - 18 - arrowLen : px + 18 + arrowLen;
-        const toX = isRight ? px - 12 : px + 12;
-        this.drawArrow(ctx, fromX, py + 8, toX, py + 8, '#16a34a', 8.0, 2.6);
+        const fromX = isRight ? px - (18 * scale) - arrowLen : px + (18 * scale) + arrowLen;
+        const toX = isRight ? px - 12 * scale : px + 12 * scale;
+        const arrowY = py + 8 * scale;
+        this.drawArrow(ctx, fromX, arrowY, toX, arrowY, '#16a34a', 8.0 * scale, 2.6 * scale);
 
-        this.drawBadgeText(ctx, isRight ? fromX - 8 : fromX + 8, py + 8, `Rx = ${formatNum(Math.abs(r.Rx))} kN`, '#15803d', isRight ? 'right' : 'left', '#86efac', 14);
+        const midX = (fromX + toX) / 2;
+        this.drawBadgeText(ctx, midX, arrowY - 14 * scale, `Rx = ${formatNum(Math.abs(r.Rx))} kN`, '#15803d', 'center', '#86efac', badgeFontSize, scale);
       }
 
       // 2. Vertical Reaction Rz (placed cleanly BELOW support to avoid crossing column)
@@ -2038,33 +2044,33 @@ export class FrameRenderer {
         const baseOffsetY = py + supportH;
         const fromY = isUpward ? baseOffsetY + arrowLen : baseOffsetY;
         const toY = isUpward ? baseOffsetY : baseOffsetY + arrowLen;
-        this.drawArrow(ctx, px, fromY, px, toY, '#16a34a', 8.0, 2.6);
+        this.drawArrow(ctx, px, fromY, px, toY, '#16a34a', 8.0 * scale, 2.6 * scale);
 
-        this.drawBadgeText(ctx, px, baseOffsetY + arrowLen + 14, `Rz = ${formatNum(Math.abs(r.Rz))} kN`, '#15803d', 'center', '#86efac', 14);
+        this.drawBadgeText(ctx, px, baseOffsetY + arrowLen + 14 * scale, `Rz = ${formatNum(Math.abs(r.Rz))} kN`, '#15803d', 'center', '#86efac', badgeFontSize, scale);
       }
 
       // 3. Reaction Moment MR (counter-clockwise arc if > 0, clockwise if < 0)
       if (Math.abs(r.MR) > 1e-3) {
-        const radius = 24;
+        const radius = Math.round(24 * scale);
         const isClockwise = r.MR < 0; // Positive is counter-clockwise
-        this.drawMomentArc(ctx, px, py + 12, radius, isClockwise, '#047857', 1.0);
+        this.drawMomentArc(ctx, px, py + 12 * scale, radius, isClockwise, '#047857', 1.0 * scale);
 
-        const textX = px - radius - 16;
-        const textY = py + supportH + 12;
-        this.drawBadgeText(ctx, textX, textY, `MR = ${formatNum(Math.abs(r.MR))} kNm`, '#047857', 'right', '#86efac', 14);
+        const textX = px - radius - (16 * scale);
+        const textY = py + supportH + (12 * scale);
+        this.drawBadgeText(ctx, textX, textY, `MR = ${formatNum(Math.abs(r.MR))} kNm`, '#047857', 'right', '#86efac', badgeFontSize, scale);
       }
     }
 
     ctx.restore();
   }
 
-  drawBadgeText(ctx, px, py, text, color, align = 'center', borderColor = '#86efac', fontSize = 14) {
+  drawBadgeText(ctx, px, py, text, color, align = 'center', borderColor = '#86efac', fontSize = 14, scale = 1.0) {
     ctx.save();
     ctx.font = `bold ${fontSize}px "JetBrains Mono", monospace`;
     const metrics = ctx.measureText(text);
-    const padX = 7;
+    const padX = Math.round(7 * scale);
     const boxW = metrics.width + padX * 2;
-    const boxH = fontSize + 8;
+    const boxH = Math.round(fontSize + 8 * scale);
 
     let boxX = px - boxW / 2;
     let textX = px;
@@ -2079,7 +2085,7 @@ export class FrameRenderer {
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(boxX, py - boxH / 2, boxW, boxH);
     ctx.strokeStyle = borderColor;
-    ctx.lineWidth = 1.3;
+    ctx.lineWidth = Math.max(1.2, 1.4 * scale);
     ctx.strokeRect(boxX, py - boxH / 2, boxW, boxH);
 
     ctx.fillStyle = color;
@@ -2092,7 +2098,7 @@ export class FrameRenderer {
   /**
    * Draw internal force diagrams (N, T, M) for all members
    */
-  drawInternalForceDiagram(type, strokeColor, fillColor, title) {
+  drawInternalForceDiagram(type, strokeColor, fillColor, title, scale = 1.0) {
     const ctx = this.ctx;
     if (!this.solution || !this.solution.elements || !this.solution.elements.length) return;
 
@@ -2100,9 +2106,9 @@ export class FrameRenderer {
 
     // 1. Draw Title Header Badge
     ctx.fillStyle = strokeColor;
-    ctx.font = 'bold 14px Inter, sans-serif';
+    ctx.font = `bold ${Math.round(14 * scale)}px Inter, sans-serif`;
     ctx.textAlign = 'left';
-    ctx.fillText(title, 20, 28);
+    ctx.fillText(title, 20 * scale, 28 * scale);
 
     // 2. Find Global Maximum Value across all elements for consistent scaling
     let globalMaxAbs = 1e-6;
@@ -2114,8 +2120,8 @@ export class FrameRenderer {
     });
 
     const isTruss = this.frameData && this.frameData.structureType === 'truss';
-    const minPlotOffsetPixels = Math.max(8.5, 7.5 * (this.transform.scale / 40));
-    const maxPlotOffsetPixels = Math.min(65, this.transform.scale * 1.25);
+    const minPlotOffsetPixels = Math.max(8.5 * scale, 7.5 * (this.transform.scale / 40) * scale);
+    const maxPlotOffsetPixels = Math.min(65 * scale, this.transform.scale * 1.25 * scale);
     const valueScale = maxPlotOffsetPixels / (globalMaxAbs || 1);
 
     // In Truss mode: forces are strictly constant along each bar, so guarantee a minimum visible diagram width for loaded bars.
@@ -2142,9 +2148,6 @@ export class FrameRenderer {
       const lenPx = Math.hypot(dxPx, dyPx) || 1;
 
       // Local transverse normal vector in screen space corresponding to +e_zeta (+90 deg in world (x,z)):
-      // In world coords: e_zeta = (-sin, cos) = (-dz/L, dx/L).
-      // On screen: px = x*scale + offX, py = offY - z*scale => d_px = dx*scale, d_py = -dz*scale.
-      // So +e_zeta in screen pixels is: nx = dyPx / lenPx, ny = -dxPx / lenPx.
       const nx = dyPx / lenPx;
       const ny = -dxPx / lenPx;
 
@@ -2155,9 +2158,6 @@ export class FrameRenderer {
         const pt = this.worldToPixel(sample.x, sample.z);
         const val = sample[type];
 
-        // Exact physical offset:
-        // For M: val > 0 points along +n_zeta (top/outer tension fiber), val < 0 points along -n_zeta (bottom/inner tension fiber)
-        // For N/T: standard positive along +n_zeta, negative along -n_zeta
         const offsetAmount = calcOffsetAmount(val);
 
         const diagX = pt.px + nx * offsetAmount;
@@ -2180,7 +2180,7 @@ export class FrameRenderer {
 
       // Draw Diagram Outline Curve
       ctx.strokeStyle = strokeColor;
-      ctx.lineWidth = 2.2;
+      ctx.lineWidth = Math.max(1.8, 2.2 * scale);
       ctx.beginPath();
       ctx.moveTo(diagramPoints[0].px, diagramPoints[0].py);
       diagramPoints.forEach(p => ctx.lineTo(p.px, p.py));
@@ -2188,8 +2188,8 @@ export class FrameRenderer {
 
       // Draw Hatching Lines (Kreskowanie) perpendicular to member axis
       ctx.strokeStyle = strokeColor;
-      ctx.lineWidth = 1.0;
-      ctx.setLineDash([2, 3]);
+      ctx.lineWidth = Math.max(1.0, 1.2 * scale);
+      ctx.setLineDash([2 * scale, 3 * scale]);
       const hatchStep = 4; // every 4th sample
       for (let i = 0; i < elem.samples.length; i += hatchStep) {
         ctx.beginPath();
@@ -2205,8 +2205,8 @@ export class FrameRenderer {
       const offsetI = calcOffsetAmount(valI);
       const offsetJ = calcOffsetAmount(valJ);
 
-      this.collectDiagramTag(placedTags, basePoints[0], diagramPoints[0], valI, strokeColor, nx, ny, offsetI, type);
-      this.collectDiagramTag(placedTags, basePoints[basePoints.length - 1], diagramPoints[diagramPoints.length - 1], valJ, strokeColor, nx, ny, offsetJ, type);
+      this.collectDiagramTag(placedTags, basePoints[0], diagramPoints[0], valI, strokeColor, nx, ny, offsetI, type, scale);
+      this.collectDiagramTag(placedTags, basePoints[basePoints.length - 1], diagramPoints[diagramPoints.length - 1], valJ, strokeColor, nx, ny, offsetJ, type, scale);
 
       // Extrema value if in middle of member (away from ends)
       const nSamples = diagramPoints.length;
@@ -2224,7 +2224,7 @@ export class FrameRenderer {
       }
       if (maxMidIdx !== -1 && Math.abs(maxMidVal) > 0.05) {
         const offsetMid = calcOffsetAmount(maxMidVal);
-        this.collectDiagramTag(placedTags, basePoints[maxMidIdx], diagramPoints[maxMidIdx], maxMidVal, strokeColor, nx, ny, offsetMid, type);
+        this.collectDiagramTag(placedTags, basePoints[maxMidIdx], diagramPoints[maxMidIdx], maxMidVal, strokeColor, nx, ny, offsetMid, type, scale);
       }
     });
 
@@ -2232,14 +2232,14 @@ export class FrameRenderer {
     return placedTags;
   }
 
-  collectDiagramTag(tagsToDraw, basePt, diagPt, val, color, nx, ny, offsetAmount, type = '') {
+  collectDiagramTag(tagsToDraw, basePt, diagPt, val, color, nx, ny, offsetAmount, type = '', scale = 1.0) {
     if (Math.abs(val) < 0.05) return;
 
     const dirSign = offsetAmount >= 0 ? 1 : -1;
     const absOffset = Math.abs(offsetAmount);
 
     // Ensure badge is pushed sufficiently away from the structural beam centerline
-    const minClearance = 16; // pixels away from baseline
+    const minClearance = 16 * scale; // pixels away from baseline
     let targetX = diagPt.px;
     let targetY = diagPt.py;
 
@@ -2248,40 +2248,41 @@ export class FrameRenderer {
       targetY = basePt.py + ny * (minClearance * (dirSign || 1));
     } else {
       // Push slightly outward beyond the diagram peak for optimal readability
-      targetX += nx * (6 * (dirSign || 1));
-      targetY += ny * (6 * (dirSign || 1));
+      targetX += nx * (6 * scale * (dirSign || 1));
+      targetY += ny * (6 * scale * (dirSign || 1));
     }
 
     // Check collision / duplication with already placed tags
     for (const tag of tagsToDraw) {
       const dist = Math.hypot(targetX - tag.x, targetY - tag.y);
-      if (dist < 42) {
+      if (dist < 42 * scale) {
         // For Bending Moment (M) at a 2-member rigid corner, deduplicate if values are equal
         if (type === 'M' && Math.abs(Math.abs(val) - Math.abs(tag.val)) < 0.1) {
           return;
         }
         // For exact same signed value at the exact same point, skip duplicate
-        if (Math.abs(val - tag.val) < 0.05 && dist < 16) {
+        if (Math.abs(val - tag.val) < 0.05 && dist < 16 * scale) {
           return;
         }
         // If different values (e.g. shear step jump at node +1 vs -1), offset along the member to show both clearly
-        if (Math.abs(targetX - tag.x) < 24) {
-          targetX += (val < 0 ? -22 : 22);
+        if (Math.abs(targetX - tag.x) < 24 * scale) {
+          targetX += (val < 0 ? -22 * scale : 22 * scale);
         } else {
-          targetY += (targetY >= tag.y ? 18 : -18);
+          targetY += (targetY >= tag.y ? 18 * scale : -18 * scale);
         }
       }
     }
 
     // Bending moment M is drawn on the tension fiber side with NO sign (+/-)
     const text = type === 'M' ? formatNum(Math.abs(val)) : ((val > 0 ? '+' : '') + formatNum(val));
-    const pad = 5;
+    const pad = Math.round(5.5 * scale);
+    const fontSize = Math.round(11.5 * scale);
     this.ctx.save();
-    this.ctx.font = 'bold 11px "JetBrains Mono", monospace';
+    this.ctx.font = `bold ${fontSize}px "JetBrains Mono", monospace`;
     const metrics = this.ctx.measureText(text);
     this.ctx.restore();
-    const boxW = Math.max(metrics.width + pad * 2, 28);
-    const boxH = 16;
+    const boxW = Math.max(metrics.width + pad * 2, Math.round(28 * scale));
+    const boxH = Math.round(fontSize + 7 * scale);
 
     tagsToDraw.push({
       x: targetX,
@@ -2290,20 +2291,24 @@ export class FrameRenderer {
       color,
       boxW,
       boxH,
-      text
+      text,
+      fontSize,
+      scale
     });
   }
 
-  renderDiagramTag(ctx, tag) {
+  renderDiagramTag(ctx, tag, scale = 1.0) {
     const { x, y, color, boxW, boxH, text } = tag;
+    const tagScale = tag.scale || scale || 1.0;
+    const fontSize = tag.fontSize || Math.round(11.5 * tagScale);
     ctx.save();
-    ctx.font = 'bold 11px "JetBrains Mono", monospace';
+    ctx.font = `bold ${fontSize}px "JetBrains Mono", monospace`;
 
     // Opaque white background badge for 100% crisp visibility
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(x - boxW / 2, y - boxH / 2, boxW, boxH);
     ctx.strokeStyle = color;
-    ctx.lineWidth = 1.3;
+    ctx.lineWidth = Math.max(1.2, 1.4 * tagScale);
     ctx.strokeRect(x - boxW / 2, y - boxH / 2, boxW, boxH);
 
     ctx.fillStyle = color;

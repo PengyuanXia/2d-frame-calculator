@@ -254,7 +254,7 @@ export function generateStepByStepReport(frameData, solution, lang = 'en', image
           ${unsolvedImg ? `
             <div class="mb-4 p-2 bg-slate-50 border border-slate-200 rounded-lg text-center">
               <div class="flex justify-center items-center p-2 bg-white rounded border border-slate-100 overflow-hidden">
-                <img src="${unsolvedImg}" alt="Truss Scheme" class="max-h-56 sm:max-h-64 w-auto object-contain" />
+                <img src="${unsolvedImg}" alt="Truss Scheme" class="max-h-64 sm:max-h-72 w-auto object-contain" />
               </div>
               <div class="text-xs sm:text-[13px] font-semibold text-slate-600 mt-2 font-sans">
                 ${isPl ? 'Rys. 1: Schemat statyczny kratownicy — geometria, warunki brzegowe i obciążenia węzłowe' : 'Fig. 1: Structural scheme of the truss — geometry, boundary conditions and nodal loads'}
@@ -276,11 +276,11 @@ export function generateStepByStepReport(frameData, solution, lang = 'en', image
               </div>
             </div>
 
-            <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-lg">
+            <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-lg overflow-x-auto">
               <div class="text-slate-500 text-xs uppercase font-sans font-bold tracking-wider mb-1.5">
                 ${isPl ? 'Stopień statycznej wyznaczalności (n)' : 'Degree of Static Determinacy (n)'}
               </div>
-              <div class="text-sm sm:text-base font-bold text-slate-900 font-mono">
+              <div class="text-sm sm:text-base font-bold text-slate-900 font-mono overflow-x-auto">
                 ${determinacyFormula}
               </div>
               <div class="mt-1.5">
@@ -303,7 +303,7 @@ export function generateStepByStepReport(frameData, solution, lang = 'en', image
           ${reactionsImg ? `
             <div class="mb-4 p-2 bg-slate-50 border border-slate-200 rounded-lg text-center">
               <div class="flex justify-center items-center p-2 bg-white rounded border border-slate-100 overflow-hidden">
-                <img src="${reactionsImg}" alt="Support Reactions Scheme" class="max-h-56 sm:max-h-64 w-auto object-contain" />
+                <img src="${reactionsImg}" alt="Support Reactions Scheme" class="max-h-64 sm:max-h-72 w-auto object-contain" />
               </div>
               <div class="text-xs sm:text-[13px] font-semibold text-slate-600 mt-2 font-sans">
                 ${isPl ? 'Rys. 2: Schemat z wyznaczonymi reakcjami podporowymi kratownicy' : 'Fig. 2: Free-body diagram with calculated support reaction forces'}
@@ -312,33 +312,50 @@ export function generateStepByStepReport(frameData, solution, lang = 'en', image
           ` : ''}
 
           <!-- Formal Equilibrium Equations -->
-          <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-lg mb-4 text-slate-800 space-y-2.5">
+          <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-lg mb-4 text-slate-800 space-y-3">
             <div class="font-sans font-bold text-slate-700 text-xs uppercase tracking-wider border-b border-slate-200 pb-1.5 mb-2">
               ${isPl ? 'Formalny zapis warunków równowagi statycznej w płaszczyźnie (x, z):' : 'Formal Planar Equilibrium Equations in (x, z) Plane:'}
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5">
-              <div class="bg-white p-3.5 rounded-md border border-slate-200">
-                <div class="font-bold text-slate-800 mb-1 font-sans text-xs sm:text-sm">${t.sumFxEq || (isPl ? 'Rzut sił na oś X:' : 'Horizontal Equilibrium:')}</div>
-                <div class="text-sm sm:text-base font-semibold">$$\\sum F_x = 0 \\implies \\sum F_{x,\\text{ext}} - \\sum R_x = 0$$</div>
-                <div class="text-xs sm:text-[13px] text-slate-600 mt-1 font-mono">
-                  $${formatNum(sumFxLoads)}\\text{ kN} - ${formatNum(sumRx)}\\text{ kN} = ${formatNum(eq.netFx, 3)}\\text{ kN} \\quad \\text{[OK ✓]}$
-                </div>
-              </div>
 
-              <div class="bg-white p-3.5 rounded-md border border-slate-200">
-                <div class="font-bold text-slate-800 mb-1 font-sans text-xs sm:text-sm">${t.sumFzEq || (isPl ? 'Rzut sił na oś Z:' : 'Vertical Equilibrium:')}</div>
-                <div class="text-sm sm:text-base font-semibold">$$\\sum F_z = 0 \\implies \\sum F_{z,\\text{ext}} - \\sum R_z = 0$$</div>
-                <div class="text-xs sm:text-[13px] text-slate-600 mt-1 font-mono">
-                  $${formatNum(sumFzLoads)}\\text{ kN} - ${formatNum(sumRz)}\\text{ kN} = ${formatNum(eq.netFz, 3)}\\text{ kN} \\quad \\text{[OK ✓]}$
-                </div>
+            <!-- Horizontal Equilibrium Row -->
+            <div class="bg-white p-3 sm:p-3.5 rounded-md border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-2 sm:gap-3 overflow-x-auto">
+              <div class="font-bold text-slate-800 font-sans text-xs sm:text-sm whitespace-nowrap">
+                ${isPl ? 'Równowaga sił poziomych:' : 'Horizontal Equilibrium:'}
               </div>
+              <div class="text-sm sm:text-base font-semibold text-slate-900 whitespace-nowrap">
+                $\\displaystyle \\sum F_x = 0 \\implies \\sum F_{x,\\text{ext}} - \\sum R_x = 0$
+              </div>
+              <div class="text-xs sm:text-[13px] text-slate-700 font-mono bg-slate-50 px-2.5 py-1.5 rounded border border-slate-200 whitespace-nowrap self-start md:self-auto flex items-center gap-1.5 shrink-0">
+                <span>$${formatNum(sumFxLoads)} - ${formatNum(sumRx)} = ${formatNum(eq.netFx, 3)}\\text{ kN}$</span>
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-bold font-sans bg-emerald-100 text-emerald-800 border border-emerald-300">OK ✓</span>
+              </div>
+            </div>
 
-              <div class="bg-white p-3.5 rounded-md border border-slate-200">
-                <div class="font-bold text-slate-800 mb-1 font-sans text-xs sm:text-sm">${t.sumMEq || (isPl ? 'Moment względem (0,0):' : 'Moment Equilibrium at (0,0):')}</div>
-                <div class="text-sm sm:text-base font-semibold">$$\\sum M_{(0,0)} = 0 \\implies \\sum M_{\\text{ext}} - \\sum M_{\\text{react}} = 0$$</div>
-                <div class="text-xs sm:text-[13px] text-slate-600 mt-1 font-mono">
-                  $${formatNum(sumMLoads)}\\text{ kNm} - ${formatNum(sumMReact)}\\text{ kNm} = ${formatNum(eq.netM, 3)}\\text{ kNm} \\quad \\text{[OK ✓]}$
-                </div>
+            <!-- Vertical Equilibrium Row -->
+            <div class="bg-white p-3 sm:p-3.5 rounded-md border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-2 sm:gap-3 overflow-x-auto">
+              <div class="font-bold text-slate-800 font-sans text-xs sm:text-sm whitespace-nowrap">
+                ${isPl ? 'Równowaga sił pionowych:' : 'Vertical Equilibrium:'}
+              </div>
+              <div class="text-sm sm:text-base font-semibold text-slate-900 whitespace-nowrap">
+                $\\displaystyle \\sum F_z = 0 \\implies \\sum F_{z,\\text{ext}} - \\sum R_z = 0$
+              </div>
+              <div class="text-xs sm:text-[13px] text-slate-700 font-mono bg-slate-50 px-2.5 py-1.5 rounded border border-slate-200 whitespace-nowrap self-start md:self-auto flex items-center gap-1.5 shrink-0">
+                <span>$${formatNum(sumFzLoads)} - ${formatNum(sumRz)} = ${formatNum(eq.netFz, 3)}\\text{ kN}$</span>
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-bold font-sans bg-emerald-100 text-emerald-800 border border-emerald-300">OK ✓</span>
+              </div>
+            </div>
+
+            <!-- Moment Equilibrium Row -->
+            <div class="bg-white p-3 sm:p-3.5 rounded-md border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-2 sm:gap-3 overflow-x-auto">
+              <div class="font-bold text-slate-800 font-sans text-xs sm:text-sm whitespace-nowrap">
+                ${isPl ? 'Równowaga momentów (0,0):' : 'Moment Equilibrium at (0,0):'}
+              </div>
+              <div class="text-sm sm:text-base font-semibold text-slate-900 whitespace-nowrap">
+                $\\displaystyle \\sum M_{(0,0)} = 0 \\implies \\sum M_{\\text{ext}} - \\sum M_{\\text{react}} = 0$
+              </div>
+              <div class="text-xs sm:text-[13px] text-slate-700 font-mono bg-slate-50 px-2.5 py-1.5 rounded border border-slate-200 whitespace-nowrap self-start md:self-auto flex items-center gap-1.5 shrink-0">
+                <span>$${formatNum(sumMLoads)} - ${formatNum(sumMReact)} = ${formatNum(eq.netM, 3)}\\text{ kNm}$</span>
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-bold font-sans bg-emerald-100 text-emerald-800 border border-emerald-300">OK ✓</span>
               </div>
             </div>
           </div>
@@ -374,7 +391,7 @@ export function generateStepByStepReport(frameData, solution, lang = 'en', image
           ${normalImg ? `
             <div class="mb-5 p-2 bg-slate-50 border border-slate-200 rounded-lg text-center">
               <div class="flex justify-center items-center p-2 bg-white rounded border border-slate-100 overflow-hidden">
-                <img src="${normalImg}" alt="Axial Force Diagram" class="max-h-56 sm:max-h-64 w-auto object-contain" />
+                <img src="${normalImg}" alt="Axial Force Diagram" class="max-h-64 sm:max-h-72 w-auto object-contain" />
               </div>
               <div class="text-xs sm:text-[13px] font-semibold text-slate-600 mt-2 font-sans">
                 ${isPl ? 'Rys. 3: Wykres sił osiowych w prętach kratownicy N(s) [kN] (niebieski = rozciąganie, czerwony = ściskanie)' : 'Fig. 3: Truss axial force diagram N(s) [kN] (blue = tension, red = compression)'}
@@ -383,11 +400,11 @@ export function generateStepByStepReport(frameData, solution, lang = 'en', image
           ` : ''}
 
           <!-- Governing Relations Card -->
-          <div class="p-3.5 bg-blue-50/80 border border-blue-200 rounded-lg mb-4 text-blue-950">
+          <div class="p-3.5 bg-blue-50/80 border border-blue-200 rounded-lg mb-4 text-blue-950 overflow-x-auto">
             <div class="font-sans font-bold uppercase tracking-wider text-blue-900 text-xs sm:text-[12.5px] mb-1.5">
               ${isPl ? 'Równowaga pręta kratowego (przeguby na obu końcach):' : 'Truss Bar Equilibrium (Idealized Pin Joints):'}
             </div>
-            <div class="text-sm sm:text-base font-mono">
+            <div class="text-sm sm:text-base font-mono overflow-x-auto">
               $$T(s) \\equiv 0, \\qquad M(s) \\equiv 0, \\qquad N(s) = \\text{const}$$
             </div>
           </div>
@@ -527,7 +544,7 @@ export function generateStepByStepReport(frameData, solution, lang = 'en', image
         ${unsolvedImg ? `
           <div class="mb-4 p-2 bg-slate-50 border border-slate-200 rounded-lg text-center">
             <div class="flex justify-center items-center p-2 bg-white rounded border border-slate-100 overflow-hidden">
-              <img src="${unsolvedImg}" alt="Structural Scheme" class="max-h-56 sm:max-h-64 w-auto object-contain" />
+              <img src="${unsolvedImg}" alt="Structural Scheme" class="max-h-64 sm:max-h-72 w-auto object-contain" />
             </div>
             <div class="text-xs sm:text-[13px] font-semibold text-slate-600 mt-2 font-sans">
               ${isPl ? 'Rys. 1: Schemat statyczny ramy — geometria, warunki brzegowe i obciążenia zewnętrzne' : 'Fig. 1: Structural scheme of the frame — geometry, boundary conditions and applied loads'}
@@ -549,11 +566,11 @@ export function generateStepByStepReport(frameData, solution, lang = 'en', image
             </div>
           </div>
 
-          <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-lg">
+          <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-lg overflow-x-auto">
             <div class="text-slate-500 text-xs uppercase font-sans font-bold tracking-wider mb-1.5">
               ${isPl ? 'Stopień statycznej wyznaczalności (n)' : 'Degree of Static Determinacy (n)'}
             </div>
-            <div class="text-sm sm:text-base font-bold text-slate-900 font-mono">
+            <div class="text-sm sm:text-base font-bold text-slate-900 font-mono overflow-x-auto">
               ${determinacyFormula}
             </div>
             <div class="mt-1.5">
@@ -576,7 +593,7 @@ export function generateStepByStepReport(frameData, solution, lang = 'en', image
         ${reactionsImg ? `
           <div class="mb-4 p-2 bg-slate-50 border border-slate-200 rounded-lg text-center">
             <div class="flex justify-center items-center p-2 bg-white rounded border border-slate-100 overflow-hidden">
-              <img src="${reactionsImg}" alt="Support Reactions Scheme" class="max-h-56 sm:max-h-64 w-auto object-contain" />
+              <img src="${reactionsImg}" alt="Support Reactions Scheme" class="max-h-64 sm:max-h-72 w-auto object-contain" />
             </div>
             <div class="text-xs sm:text-[13px] font-semibold text-slate-600 mt-2 font-sans">
               ${isPl ? 'Rys. 2: Schemat z wyznaczonymi reakcjami podporowymi i momentami utwierdzenia' : 'Fig. 2: Free-body diagram with calculated support reaction forces and fixed-end moments'}
@@ -585,33 +602,50 @@ export function generateStepByStepReport(frameData, solution, lang = 'en', image
         ` : ''}
 
         <!-- Formal Equilibrium Equations -->
-        <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-lg mb-4 text-slate-800 space-y-2.5">
+        <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-lg mb-4 text-slate-800 space-y-3">
           <div class="font-sans font-bold text-slate-700 text-xs uppercase tracking-wider border-b border-slate-200 pb-1.5 mb-2">
             ${isPl ? 'Formalny zapis warunków równowagi statycznej w płaszczyźnie (x, z):' : 'Formal Planar Equilibrium Equations in (x, z) Plane:'}
           </div>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5">
-            <div class="bg-white p-3.5 rounded-md border border-slate-200">
-              <div class="font-bold text-slate-800 mb-1 font-sans text-xs sm:text-sm">${t.sumFxEq || (isPl ? 'Rzut sił na oś X:' : 'Horizontal Equilibrium:')}</div>
-              <div class="text-sm sm:text-base font-semibold">$$\\sum F_x = 0 \\implies \\sum F_{x,\\text{ext}} - \\sum R_x = 0$$</div>
-              <div class="text-xs sm:text-[13px] text-slate-600 mt-1 font-mono">
-                $${formatNum(sumFxLoads)}\\text{ kN} - ${formatNum(sumRx)}\\text{ kN} = ${formatNum(eq.netFx, 3)}\\text{ kN} \\quad \\text{[OK ✓]}$
-              </div>
-            </div>
 
-            <div class="bg-white p-3.5 rounded-md border border-slate-200">
-              <div class="font-bold text-slate-800 mb-1 font-sans text-xs sm:text-sm">${t.sumFzEq || (isPl ? 'Rzut sił na oś Z:' : 'Vertical Equilibrium:')}</div>
-              <div class="text-sm sm:text-base font-semibold">$$\\sum F_z = 0 \\implies \\sum F_{z,\\text{ext}} - \\sum R_z = 0$$</div>
-              <div class="text-xs sm:text-[13px] text-slate-600 mt-1 font-mono">
-                $${formatNum(sumFzLoads)}\\text{ kN} - ${formatNum(sumRz)}\\text{ kN} = ${formatNum(eq.netFz, 3)}\\text{ kN} \\quad \\text{[OK ✓]}$
-              </div>
+          <!-- Horizontal Equilibrium Row -->
+          <div class="bg-white p-3 sm:p-3.5 rounded-md border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-2 sm:gap-3 overflow-x-auto">
+            <div class="font-bold text-slate-800 font-sans text-xs sm:text-sm whitespace-nowrap">
+              ${isPl ? 'Równowaga sił poziomych:' : 'Horizontal Equilibrium:'}
             </div>
+            <div class="text-sm sm:text-base font-semibold text-slate-900 whitespace-nowrap">
+              $\\displaystyle \\sum F_x = 0 \\implies \\sum F_{x,\\text{ext}} - \\sum R_x = 0$
+            </div>
+            <div class="text-xs sm:text-[13px] text-slate-700 font-mono bg-slate-50 px-2.5 py-1.5 rounded border border-slate-200 whitespace-nowrap self-start md:self-auto flex items-center gap-1.5 shrink-0">
+              <span>$${formatNum(sumFxLoads)} - ${formatNum(sumRx)} = ${formatNum(eq.netFx, 3)}\\text{ kN}$</span>
+              <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-bold font-sans bg-emerald-100 text-emerald-800 border border-emerald-300">OK ✓</span>
+            </div>
+          </div>
 
-            <div class="bg-white p-3.5 rounded-md border border-slate-200">
-              <div class="font-bold text-slate-800 mb-1 font-sans text-xs sm:text-sm">${t.sumMEq || (isPl ? 'Moment względem (0,0):' : 'Moment Equilibrium at (0,0):')}</div>
-              <div class="text-sm sm:text-base font-semibold">$$\\sum M_{(0,0)} = 0 \\implies \\sum M_{\\text{ext}} - \\sum M_{\\text{react}} = 0$$</div>
-              <div class="text-xs sm:text-[13px] text-slate-600 mt-1 font-mono">
-                $${formatNum(sumMLoads)}\\text{ kNm} - ${formatNum(sumMReact)}\\text{ kNm} = ${formatNum(eq.netM, 3)}\\text{ kNm} \\quad \\text{[OK ✓]}$
-              </div>
+          <!-- Vertical Equilibrium Row -->
+          <div class="bg-white p-3 sm:p-3.5 rounded-md border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-2 sm:gap-3 overflow-x-auto">
+            <div class="font-bold text-slate-800 font-sans text-xs sm:text-sm whitespace-nowrap">
+              ${isPl ? 'Równowaga sił pionowych:' : 'Vertical Equilibrium:'}
+            </div>
+            <div class="text-sm sm:text-base font-semibold text-slate-900 whitespace-nowrap">
+              $\\displaystyle \\sum F_z = 0 \\implies \\sum F_{z,\\text{ext}} - \\sum R_z = 0$
+            </div>
+            <div class="text-xs sm:text-[13px] text-slate-700 font-mono bg-slate-50 px-2.5 py-1.5 rounded border border-slate-200 whitespace-nowrap self-start md:self-auto flex items-center gap-1.5 shrink-0">
+              <span>$${formatNum(sumFzLoads)} - ${formatNum(sumRz)} = ${formatNum(eq.netFz, 3)}\\text{ kN}$</span>
+              <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-bold font-sans bg-emerald-100 text-emerald-800 border border-emerald-300">OK ✓</span>
+            </div>
+          </div>
+
+          <!-- Moment Equilibrium Row -->
+          <div class="bg-white p-3 sm:p-3.5 rounded-md border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-2 sm:gap-3 overflow-x-auto">
+            <div class="font-bold text-slate-800 font-sans text-xs sm:text-sm whitespace-nowrap">
+              ${isPl ? 'Równowaga momentów (0,0):' : 'Moment Equilibrium at (0,0):'}
+            </div>
+            <div class="text-sm sm:text-base font-semibold text-slate-900 whitespace-nowrap">
+              $\\displaystyle \\sum M_{(0,0)} = 0 \\implies \\sum M_{\\text{ext}} - \\sum M_{\\text{react}} = 0$
+            </div>
+            <div class="text-xs sm:text-[13px] text-slate-700 font-mono bg-slate-50 px-2.5 py-1.5 rounded border border-slate-200 whitespace-nowrap self-start md:self-auto flex items-center gap-1.5 shrink-0">
+              <span>$${formatNum(sumMLoads)} - ${formatNum(sumMReact)} = ${formatNum(eq.netM, 3)}\\text{ kNm}$</span>
+              <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-bold font-sans bg-emerald-100 text-emerald-800 border border-emerald-300">OK ✓</span>
             </div>
           </div>
         </div>
@@ -649,7 +683,7 @@ export function generateStepByStepReport(frameData, solution, lang = 'en', image
             ${normalImg ? `
               <div class="p-2 bg-slate-50 border border-slate-200 rounded-lg text-center">
                 <div class="flex justify-center items-center p-2 bg-white rounded border border-slate-100 overflow-hidden">
-                  <img src="${normalImg}" alt="Normal Force Diagram" class="max-h-52 w-auto object-contain" />
+                  <img src="${normalImg}" alt="Normal Force Diagram" class="max-h-56 sm:max-h-64 w-auto object-contain" />
                 </div>
                 <div class="text-xs sm:text-[13px] font-semibold text-slate-600 mt-2 font-sans">
                   ${isPl ? 'Rys. 3: N(s) [kN] — Siły osiowe' : 'Fig. 3: N(s) [kN] — Normal force'}
@@ -660,7 +694,7 @@ export function generateStepByStepReport(frameData, solution, lang = 'en', image
             ${shearImg ? `
               <div class="p-2 bg-slate-50 border border-slate-200 rounded-lg text-center">
                 <div class="flex justify-center items-center p-2 bg-white rounded border border-slate-100 overflow-hidden">
-                  <img src="${shearImg}" alt="Shear Force Diagram" class="max-h-52 w-auto object-contain" />
+                  <img src="${shearImg}" alt="Shear Force Diagram" class="max-h-56 sm:max-h-64 w-auto object-contain" />
                 </div>
                 <div class="text-xs sm:text-[13px] font-semibold text-slate-600 mt-2 font-sans">
                   ${isPl ? 'Rys. 4: T(s) [kN] — Siły tnące' : 'Fig. 4: T(s) [kN] — Shear force'}
@@ -671,7 +705,7 @@ export function generateStepByStepReport(frameData, solution, lang = 'en', image
             ${momentImg ? `
               <div class="p-2 bg-slate-50 border border-slate-200 rounded-lg text-center sm:col-span-2 md:col-span-1">
                 <div class="flex justify-center items-center p-2 bg-white rounded border border-slate-100 overflow-hidden">
-                  <img src="${momentImg}" alt="Bending Moment Diagram" class="max-h-52 w-auto object-contain" />
+                  <img src="${momentImg}" alt="Bending Moment Diagram" class="max-h-56 sm:max-h-64 w-auto object-contain" />
                 </div>
                 <div class="text-xs sm:text-[13px] font-semibold text-slate-600 mt-2 font-sans">
                   ${isPl ? 'Rys. 5: M(s) [kNm] (włókna rozciągane)' : 'Fig. 5: M(s) [kNm] (tension fiber side)'}
@@ -682,11 +716,11 @@ export function generateStepByStepReport(frameData, solution, lang = 'en', image
         ` : ''}
 
         <!-- Governing Differential Relations -->
-        <div class="p-3.5 bg-blue-50/80 border border-blue-200 rounded-lg mb-4 text-blue-950">
+        <div class="p-3.5 bg-blue-50/80 border border-blue-200 rounded-lg mb-4 text-blue-950 overflow-x-auto">
           <div class="font-sans font-bold uppercase tracking-wider text-blue-900 text-xs sm:text-[12.5px] mb-1.5">
             ${isPl ? 'Związki różniczkowe mechaniki prętów prostych (układ lokalny s):' : 'Governing Differential Relations in Local Member Coordinate (s):'}
           </div>
-          <div class="text-sm sm:text-base font-mono mb-2">
+          <div class="text-sm sm:text-base font-mono mb-2 overflow-x-auto">
             $$\\frac{dT(s)}{ds} = -q_\\zeta(s), \\qquad \\frac{dM(s)}{ds} = T(s), \\qquad \\frac{dN(s)}{ds} = -q_\\xi(s)$$
           </div>
           <div class="text-xs text-blue-800 font-sans border-t border-blue-200/60 pt-1.5">
