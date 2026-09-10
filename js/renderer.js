@@ -998,7 +998,10 @@ export class FrameRenderer {
 
   exportPNG(type = 'current') {
     const canvas = this.canvas;
-    if (type === 'unsolved') {
+    const specialTypes = ['unsolved', 'reactions', 'normal', 'shear', 'moment'];
+    if (specialTypes.includes(type)) {
+      if (!this.frameData) return canvas.toDataURL('image/png');
+
       const origSolution = this.solution;
       const origView = this.viewMode;
       const origDrawNodeMode = this.isDrawNodeMode;
@@ -1013,9 +1016,19 @@ export class FrameRenderer {
       this.panX = 0;
       this.panY = 0;
 
-      // Render clean structure and loads only: NO node labels, NO element labels, NO length info, NO reactions/diagrams
+      this.updateTransform();
       this.ctx.clearRect(0, 0, this.width, this.height);
-      this.drawStructure(1.0, true, { hideNodeLabels: true, hideElemLabels: true, hideElemLengths: true });
+
+      if (type === 'unsolved') {
+        // Render clean structure and loads only: NO node labels, NO element labels, NO length info, NO reactions/diagrams
+        this.drawStructure(1.0, true, { hideNodeLabels: true, hideElemLabels: true, hideElemLengths: true });
+      } else {
+        if (!this.solution || !this.solution.isStable) {
+          this.drawStructure(1.0, true);
+        } else {
+          this.drawSingleDiagramView(type);
+        }
+      }
 
       const dataUrl = this.cropCanvas(canvas, 24);
 

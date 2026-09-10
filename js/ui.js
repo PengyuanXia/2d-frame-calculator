@@ -1605,15 +1605,21 @@ export class FrameCalculatorApp {
   /* ---------------- Other Modals ---------------- */
 
   openCalcDetailsModal() {
-    let unsolvedImg = null;
+    let images = {};
     try {
-      if (this.renderer) {
-        unsolvedImg = this.renderer.exportPNG('unsolved');
+      if (this.renderer && this.renderer.exportPNG) {
+        images = {
+          unsolvedImg: this.renderer.exportPNG('unsolved'),
+          reactionsImg: this.renderer.exportPNG('reactions'),
+          normalImg: this.renderer.exportPNG('normal'),
+          shearImg: this.renderer.exportPNG('shear'),
+          momentImg: this.renderer.exportPNG('moment')
+        };
       }
     } catch (e) {
-      console.warn('Could not generate unsolved picture for report:', e);
+      console.warn('Could not generate diagram images for report:', e);
     }
-    const reportHtml = generateStepByStepReport(this.frameData, this.solution, this.lang, { unsolvedImg });
+    const reportHtml = generateStepByStepReport(this.frameData, this.solution, this.lang, images);
     this.modalCalcBody.innerHTML = reportHtml;
     this.modalCalcDetails.classList.add('open');
 

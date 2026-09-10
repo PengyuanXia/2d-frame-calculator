@@ -1746,13 +1746,6 @@ input[type=number] {
     background: transparent !important;
   }
   .modal-overlay#modalCalcDetails .modal-header {
-    display: block !important;
-    padding: 0 0 8px 0 !important;
-    background: transparent !important;
-    border-bottom: 2px solid #0284c7 !important;
-    margin-bottom: 12px !important;
-  }
-  .modal-overlay#modalCalcDetails .modal-header .btn-icon-del {
     display: none !important;
   }
   .modal-overlay#modalCalcDetails .modal-body {
