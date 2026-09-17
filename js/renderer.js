@@ -1016,7 +1016,7 @@ export class FrameRenderer {
       this.panX = 0;
       this.panY = 0;
 
-      this.updateTransform(true, 0.54);
+      this.updateTransform(true, 0.50);
       this.ctx.clearRect(0, 0, this.width, this.height);
 
       const exportScale = 1.75;
@@ -1434,11 +1434,9 @@ export class FrameRenderer {
   drawSingleDiagramView(mode, scale = 1.0) {
     const ctx = this.ctx;
 
-    // 1. Draw Diagrams or Reactions first (underneath structure loads and badges)
+    // 1. Draw Diagram curves and hatching (underneath structure)
     let diagramTags = [];
-    if (mode === 'reactions') {
-      this.drawReactions(scale);
-    } else if (mode === 'normal') {
+    if (mode === 'normal') {
       diagramTags = this.drawInternalForceDiagram('N', '#2563eb', 'rgba(37, 99, 235, 0.22)', this.t.normalDiagramTitle, scale);
     } else if (mode === 'shear') {
       diagramTags = this.drawInternalForceDiagram('T', '#dc2626', 'rgba(220, 38, 38, 0.22)', this.t.shearDiagramTitle, scale);
@@ -1451,12 +1449,17 @@ export class FrameRenderer {
     const showLoads = (mode === 'reactions');
     this.drawStructure(scale, showLoads);
 
+    // 3. Draw Reactions (arrows and badges) ON TOP of structure so members never cut through reaction badges
+    if (mode === 'reactions') {
+      this.drawReactions(scale);
+    }
+
     // If Truss Mode and viewing Shear or Moment, draw educational zero-state banner
     if (this.frameData && this.frameData.structureType === 'truss' && (mode === 'shear' || mode === 'moment')) {
       this.drawTrussZeroStateBanner(mode);
     }
 
-    // 3. Draw Diagram Value Badges on the absolute TOP layer so they are NEVER shaded or cut through by any beam/arrow!
+    // 4. Draw Diagram Value Badges on the absolute TOP layer so they are NEVER shaded or cut through by any beam/arrow!
     if (diagramTags && diagramTags.length) {
       diagramTags.forEach(tag => {
         this.renderDiagramTag(ctx, tag, scale);
@@ -2014,9 +2017,18 @@ export class FrameRenderer {
 
     ctx.save();
 
-    const arrowLen = Math.round(44 * scale);
-    const supportH = Math.round(24 * scale); // Offset below support symbol
-    const badgeFontSize = Math.round(14 * scale);
+    const arrowLen = Math.round(38 * scale);
+    const supportH = Math.round(22 * scale); // Offset below support symbol
+    const badgeFontSize = Math.round(13.5 * scale);
+
+    // Compute structure center in world X to determine left vs right outer side
+    let minX = Infinity, maxX = -Infinity;
+    (this.frameData.nodes || []).forEach(n => {
+      const x = Number(n.x) || 0;
+      if (x < minX) minX = x;
+      if (x > maxX) maxX = x;
+    });
+    const midWorldX = (minX + maxX) / 2;
 
     for (const [nodeId, r] of Object.entries(reactions)) {
       const node = nodeMap.get(nodeId);
@@ -2026,16 +2038,31 @@ export class FrameRenderer {
       const px = p.px;
       const py = p.py;
 
-      // 1. Horizontal Reaction Rx
+      // 1. Horizontal Reaction Rx: placed at support base level (below node & members), pointing in outer free space
       if (Math.abs(r.Rx) > 1e-3) {
-        const isRight = r.Rx > 0;
-        const fromX = isRight ? px - (18 * scale) - arrowLen : px + (18 * scale) + arrowLen;
-        const toX = isRight ? px - 12 * scale : px + 12 * scale;
-        const arrowY = py + 8 * scale;
-        this.drawArrow(ctx, fromX, arrowY, toX, arrowY, '#16a34a', 8.0 * scale, 2.6 * scale);
+        const arrowY = py + 12 * scale; // Below node py, at support symbol level
+        const isLeftHalf = (Number(node.x) || 0) <= midWorldX;
+        const gap = 12 * scale;
 
-        const midX = (fromX + toX) / 2;
-        this.drawBadgeText(ctx, midX, arrowY - 14 * scale, `Rx = ${formatNum(Math.abs(r.Rx))} kN`, '#15803d', 'center', '#86efac', badgeFontSize, scale);
+        if (isLeftHalf) {
+          // Placed to the LEFT of the support (outer free space)
+          const isPushingRight = r.Rx > 0;
+          const toX = isPushingRight ? px - gap : px - gap - arrowLen;
+          const fromX = isPushingRight ? px - gap - arrowLen : px - gap;
+          this.drawArrow(ctx, fromX, arrowY, toX, arrowY, '#16a34a', 7.5 * scale, 2.5 * scale);
+
+          const badgeX = Math.min(fromX, toX) - 6 * scale;
+          this.drawBadgeText(ctx, badgeX, arrowY, `Rx = ${formatNum(Math.abs(r.Rx))} kN`, '#15803d', 'right', '#86efac', badgeFontSize, scale);
+        } else {
+          // Placed to the RIGHT of the support (outer free space)
+          const isPushingLeft = r.Rx < 0;
+          const toX = isPushingLeft ? px + gap : px + gap + arrowLen;
+          const fromX = isPushingLeft ? px + gap + arrowLen : px + gap;
+          this.drawArrow(ctx, fromX, arrowY, toX, arrowY, '#16a34a', 7.5 * scale, 2.5 * scale);
+
+          const badgeX = Math.max(fromX, toX) + 6 * scale;
+          this.drawBadgeText(ctx, badgeX, arrowY, `Rx = ${formatNum(Math.abs(r.Rx))} kN`, '#15803d', 'left', '#86efac', badgeFontSize, scale);
+        }
       }
 
       // 2. Vertical Reaction Rz (placed cleanly BELOW support to avoid crossing column)
@@ -2044,7 +2071,7 @@ export class FrameRenderer {
         const baseOffsetY = py + supportH;
         const fromY = isUpward ? baseOffsetY + arrowLen : baseOffsetY;
         const toY = isUpward ? baseOffsetY : baseOffsetY + arrowLen;
-        this.drawArrow(ctx, px, fromY, px, toY, '#16a34a', 8.0 * scale, 2.6 * scale);
+        this.drawArrow(ctx, px, fromY, px, toY, '#16a34a', 7.5 * scale, 2.5 * scale);
 
         this.drawBadgeText(ctx, px, baseOffsetY + arrowLen + 14 * scale, `Rz = ${formatNum(Math.abs(r.Rz))} kN`, '#15803d', 'center', '#86efac', badgeFontSize, scale);
       }
