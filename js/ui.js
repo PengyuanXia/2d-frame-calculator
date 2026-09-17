@@ -764,8 +764,8 @@ export class FrameCalculatorApp {
     if (lblContactModalTitle) lblContactModalTitle.textContent = t.contactModalTitle || 'Contact & Feedback';
     const lblContactAuthorSub = document.getElementById('lblContactAuthorSub');
     if (lblContactAuthorSub) lblContactAuthorSub.textContent = t.contactAuthorSub || 'Doctoral Researcher • Warsaw University of Technology (PW)';
-    const lblContactMissionNote = document.getElementById('lblContactMissionNote');
-    if (lblContactMissionNote && t.contactMissionNote) lblContactMissionNote.textContent = t.contactMissionNote;
+    const lblHeaderMissionNote = document.getElementById('lblHeaderMissionNote');
+    if (lblHeaderMissionNote && t.headerMissionNote) lblHeaderMissionNote.textContent = t.headerMissionNote;
     const lblContactEmailTitle = document.getElementById('lblContactEmailTitle');
     if (lblContactEmailTitle) lblContactEmailTitle.textContent = t.contactEmailTitle || 'University Email';
     const lblContactGithubTitle = document.getElementById('lblContactGithubTitle');
